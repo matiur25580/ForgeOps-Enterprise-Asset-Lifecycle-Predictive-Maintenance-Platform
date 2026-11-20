@@ -13,7 +13,7 @@ async function scheduleTenantScans(){
  if(slot===lastScheduleSlot)return;
  lastScheduleSlot=slot;
  const tenants=await Tenant.find({status:'active'}).select('_id').limit(5000).lean();
- for(const tenant of tenants)await enqueueBackgroundJob({tenantId:tenant._id,type:'operations_scan',dedupeKey:'operations-scan:'+slot});
+ for(const tenant of tenants){const active=await BackgroundJob.exists({tenantId:tenant._id,type:'operations_scan',status:{$in:['queued','running']}});if(!active)await enqueueBackgroundJob({tenantId:tenant._id,type:'operations_scan',dedupeKey:'operations-scan:'+slot});}
  const cutoff=new Date(now.getTime()-10*60*1000);
  await BackgroundJob.updateMany({status:'running',lockExpiresAt:{$lte:now},attempts:{$gte:5}},{$set:{status:'failed',lastError:'Worker lease expired after maximum attempts.'},$unset:{lockedAt:1,lockExpiresAt:1,lockedBy:1}});
  await BackgroundJob.deleteMany({status:{$in:['completed','failed']},updatedAt:{$lt:new Date(now.getTime()-30*86400000)}});
