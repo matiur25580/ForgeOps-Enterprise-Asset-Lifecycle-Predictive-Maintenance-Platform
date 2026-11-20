@@ -25,6 +25,7 @@ import { notificationsRouter } from './routes/notifications.routes.js';
 import { notificationSettingsRouter } from './routes/notification-settings.routes.js';
 import { auditEventsRouter } from './routes/audit-events.routes.js';
 import { teamRouter } from './routes/team.routes.js';
+import { mfaRouter } from './routes/mfa.routes.js';
 
 export const app = express();
 
@@ -84,4 +85,5 @@ app.use('/api/v1/notifications', notificationsRouter);
 app.use('/api/v1/notification-settings', notificationSettingsRouter);
 app.use('/api/v1/audit-events', auditEventsRouter);
 app.use('/api/v1/team', teamRouter);
+app.use('/api/v1/mfa', mfaRouter);
 app.use(errorHandler);
