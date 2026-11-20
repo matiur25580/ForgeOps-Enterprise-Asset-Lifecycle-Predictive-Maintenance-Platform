@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 12 — asset financial intelligence, depreciation, warranty and TCO  
+**Project status:** Phase 13 — vendor performance, contract renewals and procurement spend intelligence  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -204,6 +204,9 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Straight-line asset book depreciation with salvage value and useful-life assumptions
 - [x] Warranty expiry and 90-day exposure tracking
 - [x] Currency-grouped asset Total Cost of Ownership reporting
+- [x] Vendor scorecards using on-time delivery, quality acceptance and order fulfilment
+- [x] Supplier contract register with renewal notice windows and auto-renewal controls
+- [x] Committed procurement spend by vendor, currency and month
 - [ ] Asset health trend charts
 - [ ] Facility operations dashboard
 - [ ] MTTR, MTBF, downtime, and cost analytics
