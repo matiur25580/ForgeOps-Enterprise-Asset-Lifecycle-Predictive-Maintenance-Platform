@@ -89,7 +89,7 @@ after(async () => {
   if (mongod) await mongod.stop();
 });
 
-test('organization registration persists an owner and issues a secure-by-default session cookie', async () => {
+test('organization registration persists an owner and issues a scoped refresh cookie', async () => {
   const response = await post('/api/v1/auth/register', registration());
   const payload = await response.json();
 
