@@ -2,11 +2,9 @@ import { Router, type Request } from 'express';
 import { Types, type FilterQuery } from 'mongoose';
 import { z } from 'zod';
 import type { AccessClaims } from '../auth/token.service.js';
-import type { FacilityRecord } from '../models/facility.model.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { Facility } from '../models/facility.model.js';
-import { Asset } from '../models/asset.model.js';
 import { WorkOrder } from '../models/work-order.model.js';
 import { Vendor } from '../models/vendor.model.js';
 import { SparePart } from '../models/spare-part.model.js';
@@ -49,15 +47,11 @@ const movementSchema = z.object({
 
 function claimsFor(req:Request):AccessClaims{return req.auth!;}
 function admin(c:AccessClaims):boolean{return c.role==='owner'||c.role==='admin';}
-function manager(c:AccessClaims):boolean{return admin(c)||c.role==='manager';}
 function inScope(c:AccessClaims,facilityId:string):boolean{return admin(c)||c.facilityIds.includes(facilityId);}
-function scopedFacility(c:AccessClaims):FilterQuery<FacilityRecord>{
- return admin(c)?{tenantId:new Types.ObjectId(c.tenantId)}:{tenantId:new Types.ObjectId(c.tenantId),_id:{$in:c.facilityIds.map(x=>new Types.ObjectId(x))}};
-}
 function bad(response:any,code:string,status=400):void{response.status(status).json({error:{code}});}
 
 inventoryRouter.get('/vendors',authorize('owner','admin','manager','technician','viewer'),async(req,res,next)=>{
- try{const c=claimsFor(req);const vendors=await Vendor.find({tenantId:c.tenantId,...(req.query.status?{status:req.query.status}:{})}).sort({name:1}).lean();res.status(200).json({data:{vendors}});}catch(e){next(e);}
+ try{const c=claimsFor(req);const status=typeof req.query.status==='string'&&['active','inactive','under_review'].includes(req.query.status)?req.query.status as 'active'|'inactive'|'under_review':undefined;const vendors=await Vendor.find({tenantId:c.tenantId,...(status?{status}:{})}).sort({name:1}).lean();res.status(200).json({data:{vendors}});}catch(e){next(e);}
 });
 inventoryRouter.post('/vendors',authorize('owner','admin','manager'),async(req,res,next)=>{
  try{const parsed=vendorSchema.safeParse(req.body);if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR',details:parsed.error.flatten()}});return;}
