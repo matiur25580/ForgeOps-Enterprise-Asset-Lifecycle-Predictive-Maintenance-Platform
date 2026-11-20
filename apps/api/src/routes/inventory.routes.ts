@@ -127,7 +127,7 @@ inventoryRouter.post('/movements',authorize('owner','admin','manager','technicia
  const quantityBefore=after.onHand-delta;
  let movement;
  try{
-  movement=await StockMovement.create({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId),movementType:d.movementType,quantity:d.quantity,quantityBefore,quantityAfter:after.onHand,unitCost:d.unitCost??part.unitCost,reference:d.reference,reason:d.reason,workOrderId:d.workOrderId?new Types.ObjectId(d.workOrderId):undefined,vendorId:d.vendorId?new Types.ObjectId(d.vendorId):undefined,performedBy:new Types.ObjectId(c.sub)});
+  movement=await StockMovement.create({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId),movementType:d.movementType,quantity:d.quantity,quantityBefore,quantityAfter:after.onHand,unitCost:d.unitCost??part.unitCost,currency:part.currency,reference:d.reference,reason:d.reason,workOrderId:d.workOrderId?new Types.ObjectId(d.workOrderId):undefined,vendorId:d.vendorId?new Types.ObjectId(d.vendorId):undefined,performedBy:new Types.ObjectId(c.sub)});
  }catch(error){
   await InventoryBalance.updateOne({_id:after._id},{$inc:{onHand:-delta}});
   throw error;
