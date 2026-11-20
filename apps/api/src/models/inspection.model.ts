@@ -22,6 +22,8 @@ export interface InspectionRecord {
   performedAt:Date;
   reviewedBy?:Types.ObjectId;
   reviewedAt?:Date;
+  reviewStatus:'pending'|'approved'|'rejected';
+  reviewNotes?:string;
 }
 const responseSchema=new Schema<InspectionResponse>({
  itemKey:{type:String,required:true},result:{type:String,enum:['pass','fail','not_applicable'],required:true},
@@ -42,7 +44,9 @@ const schema=new Schema<InspectionRecord>({
  performedBy:{type:Schema.Types.ObjectId,ref:'User',required:true},
  performedAt:{type:Date,required:true},
  reviewedBy:{type:Schema.Types.ObjectId,ref:'User'},
- reviewedAt:{type:Date}
+ reviewedAt:{type:Date},
+ reviewStatus:{type:String,enum:['pending','approved','rejected'],default:'pending',required:true},
+ reviewNotes:{type:String,trim:true,maxlength:2000}
 },{timestamps:true});
 schema.index({tenantId:1,inspectionNumber:1},{unique:true});
 schema.index({tenantId:1,facilityId:1,performedAt:-1});
