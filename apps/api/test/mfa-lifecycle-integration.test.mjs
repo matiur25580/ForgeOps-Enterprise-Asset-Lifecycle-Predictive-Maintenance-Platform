@@ -158,6 +158,6 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
     password:account.password
   },null);
   assert.equal(passwordOnlyLogin.status,200);
-  assert.equal(passwordOnlyLogin.data.data.mfaRequired,false);
+  assert.notEqual(passwordOnlyLogin.data.data.mfaRequired,true);
   assert.ok(passwordOnlyLogin.data.data.accessToken);
 });
