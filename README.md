@@ -164,6 +164,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Accepted goods posted to facility stock and stock movement ledger; damaged/quarantined goods excluded from on-hand stock
 - [x] Procurement workspace for requisitions, purchase orders and GRNs
 - [x] Simulated sensor readings and transparent asset health heuristic
+- [x] Telemetry-driven alert creation and active-alert refresh
 - [x] Angular maintenance workspace for work order queue and PM plan management
 
 ### Phase 3 — Maintenance execution
@@ -183,7 +184,9 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Simulated telemetry ingestion with tenant-scoped time-series readings
 - [x] Explainable threshold-based asset health indicators
 - [x] Authenticated telemetry and health monitoring workspace
-- [ ] Configurable threshold rules and alert lifecycle
+- [x] Tenant-configurable telemetry threshold rules and alert lifecycle
+- [x] Alert acknowledgement/resolution with audit events
+- [x] Alert-to-corrective-work-order linkage with duplicate-link protection
 - [ ] Asset health trend charts
 - [ ] Facility operations dashboard
 - [ ] MTTR, MTBF, downtime, and cost analytics
@@ -197,7 +200,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 
 ## Procurement consistency note
 
-Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).
+Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).
 
 ## 8. Local development
 
