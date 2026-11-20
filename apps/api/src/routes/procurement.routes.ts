@@ -22,13 +22,13 @@ const requisitionSchema=z.object({
  facilityId:z.string().refine(validId),
  items:z.array(z.object({sparePartId:z.string().refine(validId),quantity:z.number().finite().positive().max(1_000_000),estimatedUnitCost:z.number().finite().nonnegative()}).strict()).min(1).max(100),
  justification:z.string().trim().min(5).max(2000),neededBy:z.coerce.date().optional()
-}).strict();
+}).strict().superRefine((v,ctx)=>{const ids=v.items.map(x=>x.sparePartId);if(new Set(ids).size!==ids.length)ctx.addIssue({code:z.ZodIssueCode.custom,message:'A spare part may appear only once per requisition.',path:['items']});});
 const rejectSchema=z.object({reason:z.string().trim().min(5).max(1000)}).strict();
 const orderSchema=z.object({vendorId:z.string().refine(validId),expectedAt:z.coerce.date().optional(),notes:z.string().trim().max(2000).optional()}).strict();
 const receiptSchema=z.object({
  items:z.array(z.object({sparePartId:z.string().refine(validId),quantityReceived:z.number().finite().positive().max(1_000_000),condition:z.enum(['accepted','damaged','quarantined']).default('accepted')}).strict()).min(1).max(100),
  deliveryReference:z.string().trim().max(120).optional(),notes:z.string().trim().max(2000).optional()
-}).strict();
+}).strict().superRefine((v,ctx)=>{const ids=v.items.map(x=>x.sparePartId);if(new Set(ids).size!==ids.length)ctx.addIssue({code:z.ZodIssueCode.custom,message:'A spare part may appear only once per receipt.',path:['items']});});
 function claims(req:Request):AccessClaims{return req.auth!;}
 function isAdmin(c:AccessClaims){return c.role==='owner'||c.role==='admin';}
 function canManage(c:AccessClaims){return isAdmin(c)||c.role==='manager';}
@@ -86,11 +86,11 @@ procurementRouter.get('/goods-receipts',async(req,res,next)=>{
 procurementRouter.post('/purchase-orders/:id/receipts',authorize('owner','admin','manager','technician'),async(req,res,next)=>{
  try{const p=receiptSchema.safeParse(req.body);if(!p.success){res.status(400).json({error:{code:'VALIDATION_ERROR',details:p.error.flatten()}});return;}const c=claims(req),id=req.params.id;if(typeof id!=='string'||!validId(id)){fail(res,'INVALID_PURCHASE_ORDER_ID');return;}const order=await PurchaseOrder.findOne({_id:id,tenantId:c.tenantId});if(!order||!inScope(c,order.facilityId.toString())){fail(res,'PURCHASE_ORDER_NOT_FOUND',404);return;}if(order.status==='received'||order.status==='cancelled'){fail(res,'PURCHASE_ORDER_CLOSED',409);return;}
  const requested=new Map<string,number>();for(const line of p.data.items)requested.set(line.sparePartId,(requested.get(line.sparePartId)||0)+line.quantityReceived);
- for(const [partId,qty] of requested){const line=order.items.find(x=>x.sparePartId.toString()===partId);if(!line){fail(res,'PART_NOT_ON_PURCHASE_ORDER',400);return;}if(line.receivedQuantity+qty>line.orderedQuantity){fail(res,'RECEIPT_EXCEEDS_ORDERED_QUANTITY',409);return;}}
+ for(const [partId,qty] of requested){const line=order.items.find(x=>x.sparePartId.toString()===partId);if(!line){fail(res,'PART_NOT_ON_PURCHASE_ORDER',400);return;}if(line.receivedQuantity+qty>line.orderedQuantity+1e-8){fail(res,'RECEIPT_EXCEEDS_ORDERED_QUANTITY',409);return;}}
  const parts=await SparePart.find({_id:{$in:[...requested.keys()]},tenantId:c.tenantId,active:true}).select('_id unitCost');if(parts.length!==requested.size){fail(res,'SPARE_PART_NOT_FOUND',404);return;}
  const receipt=await GoodsReceipt.create({tenantId:order.tenantId,facilityId:order.facilityId,receiptNumber:number('GRN'),purchaseOrderId:order._id,vendorId:order.vendorId,receivedBy:new Types.ObjectId(c.sub),items:p.data.items.map(x=>({...x,sparePartId:new Types.ObjectId(x.sparePartId)})),deliveryReference:p.data.deliveryReference,notes:p.data.notes,receivedAt:new Date()});
  for(const [partId,qty] of requested){const line=order.items.find(x=>x.sparePartId.toString()===partId)!;line.receivedQuantity+=qty;}
- const complete=order.items.every(x=>x.receivedQuantity===x.orderedQuantity);order.status=complete?'received':'partially_received';order.updatedBy=new Types.ObjectId(c.sub);await order.save();
+ const complete=order.items.every(x=>x.receivedQuantity>=x.orderedQuantity-1e-8);order.status=complete?'received':'partially_received';order.updatedBy=new Types.ObjectId(c.sub);await order.save();
  for(const item of p.data.items){if(item.condition!=='accepted')continue;const part=parts.find(x=>x._id.toString()===item.sparePartId)!;const key={tenantId:order.tenantId,facilityId:order.facilityId,sparePartId:new Types.ObjectId(item.sparePartId)};
   try{await InventoryBalance.updateOne(key,{$setOnInsert:{onHand:0,reserved:0,reorderPoint:0,updatedBy:new Types.ObjectId(c.sub)}},{upsert:true});}catch(e){if(!(typeof e==='object'&&e!==null&&'code'in e&&e.code===11000))throw e;}
   const balance=await InventoryBalance.findOneAndUpdate(key,{$inc:{onHand:item.quantityReceived},$set:{updatedBy:new Types.ObjectId(c.sub)}},{new:true});if(!balance)throw new Error('Unable to update inventory balance for received goods.');
