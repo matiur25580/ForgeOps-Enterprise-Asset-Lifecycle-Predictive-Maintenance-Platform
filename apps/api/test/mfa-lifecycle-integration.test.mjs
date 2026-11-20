@@ -119,7 +119,20 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   token=verified.data.data.accessToken;
   const oldCodes=confirmation.data.data.recoveryCodes;
-  const rotation=await call('/api/v1/mfa/recovery-codes/regenerate','POST',{code:oldCodes[0]});
+
+  const concurrentLogins=await Promise.all([0,1].map(()=>call('/api/v1/auth/login','POST',{
+    organizationSlug:account.organizationSlug,
+    email:account.email,
+    password:account.password
+  },null)));
+  assert.ok(concurrentLogins.every(result=>result.status===200));
+  const concurrentProofs=await Promise.all(concurrentLogins.map(result=>call('/api/v1/auth/login/mfa','POST',{
+    challengeToken:result.data.data.challengeToken,
+    code:oldCodes[0]
+  },null)));
+  assert.deepEqual(concurrentProofs.map(result=>result.status).sort(),[200,401]);
+
+  const rotation=await call('/api/v1/mfa/recovery-codes/regenerate','POST',{code:oldCodes[2]});
   assert.equal(rotation.status,200);
   assert.equal(rotation.data.data.recoveryCodes.length,10);
 
