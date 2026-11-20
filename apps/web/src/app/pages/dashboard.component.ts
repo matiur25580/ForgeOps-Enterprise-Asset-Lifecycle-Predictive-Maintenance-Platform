@@ -30,6 +30,7 @@ import { Component } from '@angular/core';
         <a class="nav-item" href="/assets"><span>⌁</span> Asset health</a>
         <a class="nav-item" href="/analytics"><span>▥</span> Operations analytics</a>
         <a class="nav-item" href="/reports"><span>⇩</span> Report centre & exports</a>
+        <a class="nav-item" href="/notifications"><span>♧</span> Notification centre</a>
         <div class="sidebar-bottom">
           <div class="support-card"><strong>Need a hand?</strong><p>Visit the operations help center.</p><a href="mailto:support&#64;forgeops.example">Get support ↗</a></div>
           <div class="user-profile"><div class="avatar">JD</div><div><strong>Jordan Davis</strong><small>Operations manager</small></div><span class="profile-menu">•••</span></div>
