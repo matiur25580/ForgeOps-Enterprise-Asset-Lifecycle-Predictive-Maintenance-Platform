@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 15 — notification centre and workflow SLA reminders  
+**Project status:** Phase 16 — durable background jobs and scheduled workflow scans  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -267,3 +267,7 @@ Demonstration scenarios will include:
 
 ForgeOps is being developed incrementally. Features listed in the roadmap are planned until their implementation and tests are present in the repository.
 \n\n## Reporting and exports\n\nThe authenticated report centre provides date-filtered CSV exports for work orders, downtime events, inspections and purchase orders. Exports enforce tenant and facility scope, use a 366-day maximum range and cap results at 10,000 rows. Purchase-order exports represent commitments, not paid invoices. See [report centre and export documentation](docs/reporting/report-centre-and-exports.md). PDF rendering, scheduled delivery and email distribution remain future work.\n\n\n## Notifications and workflow alerts\n\nThe authenticated notification centre provides user-scoped in-app alerts for assigned work orders approaching or breaching due dates, vendor contract renewal windows, and critical asset alerts. Managers and administrators can trigger a bounded, idempotent operations scan. Email, SMS, push delivery and scheduled background dispatch are not included yet. See [notification centre documentation](docs/operations/notification-centre-and-workflow-alerts.md).\n
+
+## Durable background jobs and scheduled escalation scans
+
+ForgeOps includes a MongoDB-backed job queue and a separate worker process. Active tenants receive an idempotently scheduled operations scan every five minutes for due/overdue work orders, vendor contract renewal windows and open critical asset alerts. Jobs use atomic claims, expiring leases, bounded retries with exponential backoff and graceful SIGTERM/SIGINT shutdown. Manual scans are queued asynchronously. Run locally with `npm run dev:worker`; production worker command: `npm run start:worker`. See [background job engine documentation](docs/operations/background-job-engine-and-escalation.md). The queue currently uses MongoDB rather than Redis/BullMQ; external email/SMS/push delivery is not implemented.
