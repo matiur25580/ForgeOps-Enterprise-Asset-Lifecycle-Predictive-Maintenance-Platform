@@ -7,6 +7,7 @@ import { DashboardComponent } from './pages/dashboard.component';
 import { MaintenanceComponent } from './pages/maintenance.component';
 import { InventoryComponent } from './pages/inventory.component';
 import { ProcurementComponent } from './pages/procurement.component';
+import { TelemetryComponent } from './pages/telemetry.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'maintenance', component: MaintenanceComponent, canActivate: [authGuard] },
   { path: 'inventory', component: InventoryComponent, canActivate: [authGuard] },
   { path: 'procurement', component: ProcurementComponent, canActivate: [authGuard] },
+  { path: 'telemetry', component: TelemetryComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
