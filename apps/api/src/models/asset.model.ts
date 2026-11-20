@@ -22,7 +22,7 @@ export interface AssetRecord {
   purchaseCost?: number;
   salvageValue?: number;
   usefulLifeMonths?: number;
-  depreciationMethod: 'straight_line';
+  depreciationMethod?: 'straight_line';
   depreciationStartDate?: Date;
   warrantyProvider?: string;
   warrantyReference?: string;
