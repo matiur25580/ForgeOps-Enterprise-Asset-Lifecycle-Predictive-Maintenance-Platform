@@ -7,7 +7,7 @@ import {sendNotificationEmail,emailTransportConfigured} from './email.service.js
 function isQuietNow(start:string,end:string,timezone:string,now=new Date()){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:timezone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now);
  const current=Number(parts.find(p=>p.type==='hour')?.value??0)*60+Number(parts.find(p=>p.type==='minute')?.value??0);
- const [sh,sm]=start.split(':').map(Number),[eh,em]=end.split(':').map(Number),from=sh*60+sm,to=eh*60+em;
+ const from=Number(start.slice(0,2))*60+Number(start.slice(3,5)),to=Number(end.slice(0,2))*60+Number(end.slice(3,5));
  return from===to?true:from<to?current>=from&&current<to:current>=from||current<to;
 }
 function escapeHtml(value:string){return value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]??char));}
