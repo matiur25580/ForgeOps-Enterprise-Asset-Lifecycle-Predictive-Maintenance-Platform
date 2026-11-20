@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import { User } from '../models/user.model.js';
 
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-function encryptionKey():Buffer{return createHash('sha256').update('forgeops:mfa:encryption:v1:').update(env.AUTH_ACCESS_TOKEN_SECRET).digest();}
+function encryptionKey():Buffer{return createHash('sha256').update('forgeops:mfa:encryption:v1:').update(env.mfaEncryptionKey).digest();}
 export function encryptSecret(secret:string):string{
   const iv=randomBytes(12);const cipher=createCipheriv('aes-256-gcm',encryptionKey(),iv);
   const encrypted=Buffer.concat([cipher.update(secret,'utf8'),cipher.final()]);
@@ -26,6 +26,10 @@ function decodeBase32(value:string):Buffer{
   let buffer=0,bits=0;const bytes:number[]=[];
   for(const char of value.toUpperCase().replace(/=+$/,'')){const index=alphabet.indexOf(char);if(index<0)throw new Error('Invalid Base32 secret');buffer=(buffer<<5)|index;bits+=5;if(bits>=8){bytes.push((buffer>>(bits-8))&255);bits-=8;}}
   return Buffer.from(bytes);
+}
+export function generateTotpCode(secret:string,now=Date.now()):string{
+  const step=Math.floor(now/30_000);
+  return codeFor(secret,step);
 }
 function codeFor(secret:string,step:number):string{
   const counter=Buffer.alloc(8);counter.writeBigUInt64BE(BigInt(step));
