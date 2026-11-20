@@ -15,15 +15,19 @@ export function severityFor(metric: TelemetryMetric, value: number, rule: { warn
 }
 export async function evaluateTelemetryAlerts(readings: Array<{tenantId: Types.ObjectId; facilityId: Types.ObjectId; assetId: Types.ObjectId; metric: TelemetryMetric; value: number; unit: string; recordedAt: Date}>) {
   let created = 0; let refreshed = 0;
-  const ruleCache = new Map<string, {warningThreshold:number;criticalThreshold:number;direction:'high'|'low';enabled:boolean}>();
+  type AlertRule = {warningThreshold:number;criticalThreshold:number;direction:'high'|'low';enabled:boolean};
+  const ruleCache = new Map<string, AlertRule>();
   for (const reading of readings) {
     const key = reading.tenantId.toString() + ':' + reading.metric;
     let rule = ruleCache.get(key);
     if (!rule) {
       const configured = await TelemetryAlertRule.findOne({tenantId:reading.tenantId,metric:reading.metric}).lean();
       const fallback = defaults[reading.metric];
-      rule = configured ? {warningThreshold:configured.warningThreshold,criticalThreshold:configured.criticalThreshold,direction:configured.direction,enabled:configured.enabled} : {...fallback,enabled:true};
-      ruleCache.set(key,rule);
+      const resolvedRule: AlertRule = configured
+        ? {warningThreshold:configured.warningThreshold,criticalThreshold:configured.criticalThreshold,direction:configured.direction,enabled:configured.enabled}
+        : {warningThreshold:fallback.warning,criticalThreshold:fallback.critical,direction:fallback.direction,enabled:true};
+      ruleCache.set(key,resolvedRule);
+      rule = resolvedRule;
     }
     if (!rule.enabled) continue;
     const severity = severityFor(reading.metric,reading.value,rule);
