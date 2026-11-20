@@ -89,6 +89,13 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(initialStatus.data.data.enabled,true);
   assert.equal(initialStatus.data.data.recoveryCodesRemaining,10);
 
+  const duplicateSetup=await call('/api/v1/mfa/setup','POST',{});
+  assert.equal(duplicateSetup.status,409);
+  assert.equal(duplicateSetup.data.error.code,'MFA_ALREADY_ENABLED');
+  const statusAfterDuplicateSetup=await call('/api/v1/mfa/status');
+  assert.equal(statusAfterDuplicateSetup.data.data.enabled,true);
+  assert.equal(statusAfterDuplicateSetup.data.data.recoveryCodesRemaining,10);
+
   const login=await call('/api/v1/auth/login','POST',{
     organizationSlug:account.organizationSlug,
     email:account.email,
