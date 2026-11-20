@@ -84,7 +84,7 @@ inspectionsRouter.get('/',async(req,res,next)=>{
  }catch(e){next(e);}
 });
 inspectionsRouter.post('/:inspectionId/corrective-work-order',authorize('owner','admin','manager'),async(req,res,next)=>{
- try{const c=claimsFor(req);const id=req.params.inspectionId;if(!oid(id)){res.status(400).json({error:{code:'INVALID_INSPECTION_ID'}});return;}
+ try{const c=claimsFor(req);const id=String(req.params.inspectionId ?? '');if(!oid(id)){res.status(400).json({error:{code:'INVALID_INSPECTION_ID'}});return;}
  const inspection=await Inspection.findOne({_id:id,tenantId:c.tenantId});if(!inspection||!inScope(c,inspection.facilityId.toString())){res.status(404).json({error:{code:'INSPECTION_NOT_FOUND'}});return;}
  if(!inspection.findingsCount){res.status(409).json({error:{code:'NO_FAILED_FINDINGS'}});return;}
  if(inspection.correctiveWorkOrderId){const existing=await WorkOrder.findOne({_id:inspection.correctiveWorkOrderId,tenantId:c.tenantId});if(existing){res.status(200).json({data:{workOrder:existing,alreadyLinked:true}});return;}}
