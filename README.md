@@ -26,7 +26,7 @@ It connects the operational lifecycle in one place:
 
 The platform is being built as a realistic enterprise product, not a collection of disconnected CRUD screens. Workflows are tenant-scoped, important state transitions are auditable, and operational metrics document their assumptions.
 
-> **Project status:** Phase 19 — enterprise team administration, secure invitations and live authorization refresh. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
+> **Project status:** Phase 20 — authenticator-based MFA, recovery codes and account security controls. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
 
 ## At a glance
 
@@ -81,6 +81,8 @@ The platform is being built as a realistic enterprise product, not a collection 
 - Read-only audit explorer with actor context, filters, pagination and sensitive-field redaction.
 - Team member administration, 72-hour single-use invitations, role governance and facility assignment.
 - Immediate API authorization refresh after role changes, facility reassignment or account disablement.
+- Optional per-user TOTP multi-factor authentication with encrypted authenticator secrets and single-use recovery codes.
+- MFA challenge-based login, TOTP replay protection and recovery-code regeneration.
 - Optional SMTP email delivery and a tenant/user-scoped delivery audit ledger.
 - Graceful worker shutdown and old job-record retention cleanup.
 
@@ -214,7 +216,7 @@ README.md
 
 - Tenant identity is derived from verified access-token claims, not trusted request-body values.
 - Tenant/user scope is applied on notification, delivery and operational data access.
-- Passwords use bcrypt hashing; refresh tokens are rotated, hashed at rest and revocable.
+- Passwords use bcrypt hashing; refresh tokens are rotated, hashed at rest and revocable.\n- Optional TOTP MFA secrets are encrypted with AES-256-GCM; recovery codes are hashed, single-use and never retrievable.\n- MFA login challenges are short-lived; authenticator time steps and recovery-code consumption are replay-protected.
 - Role-based access and facility scoping protect privileged workflows.
 - Critical state changes have audit-event coverage.
 - API input is validated; HTTP security headers, CORS controls and rate limiting are enabled.
@@ -315,7 +317,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [x] Tenant/facility-scoped audit and compliance explorer.
 - [ ] Production device ingestion and validated predictive models.
 - [ ] End-to-end browser tests, load testing and independent security review.
-- [ ] Team invitation email delivery, SCIM/SSO provisioning and bulk user import.
+- [ ] Mandatory MFA policies, WebAuthn/passkeys, enterprise SSO and administrator-assisted recovery.\n- [ ] Team invitation email delivery, SCIM provisioning and bulk user import.
 - [ ] Email digest scheduling, SMS/push adapters and deferred quiet-hours delivery.
 - [ ] Production observability, backup/restore drills and public demo environment.
 
@@ -340,6 +342,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [Notification preferences, SLA escalation and SMTP](docs/operations/notification-preferences-email-delivery.md)
 - [Audit and compliance explorer](docs/security/audit-and-compliance-explorer.md)
 - [Team administration and invitations](docs/security/team-administration-and-invitations.md)
+- [Multi-factor authentication](docs/security/multi-factor-authentication.md)
 
 ## Project principles
 
