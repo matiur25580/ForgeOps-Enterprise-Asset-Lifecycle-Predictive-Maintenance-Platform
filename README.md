@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 3 — authenticated asset, facility and maintenance workflows with preventive scheduling  
+**Project status:** Phase 3 — authenticated asset, facility, maintenance and MRO inventory workflows  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -155,6 +155,9 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Live asset inventory, registration, filters, lifecycle update, and soft archive UI
 - [x] Tenant-scoped work orders with technician assignment and enforced status transitions
 - [x] Recurring preventive maintenance plans with due work-order generation
+- [x] Tenant-wide spare parts catalog and vendor directory
+- [x] Facility stock balances, receipts, issues, adjustments and movement ledger
+- [x] Inventory & MRO workspace with low-stock visibility
 - [x] Angular maintenance workspace for work order queue and PM plan management
 
 ### Phase 3 — Maintenance execution
