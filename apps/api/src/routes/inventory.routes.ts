@@ -111,7 +111,13 @@ inventoryRouter.post('/movements',authorize('owner','admin','manager','technicia
  if(d.movementType==='receipt'&&d.quantity<0){bad(res,'RECEIPT_QUANTITY_MUST_BE_POSITIVE');return;}
  if(d.movementType==='issue'&&d.quantity<=0){bad(res,'ISSUE_QUANTITY_MUST_BE_POSITIVE');return;}
  if(d.movementType==='adjustment'&&d.quantity===0){bad(res,'ADJUSTMENT_CANNOT_BE_ZERO');return;}
- await InventoryBalance.updateOne({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId)},{$setOnInsert:{onHand:0,reserved:0,reorderPoint:0,updatedBy:new Types.ObjectId(c.sub)}},{upsert:true});
+ // Concurrent first receipts can race to create the same unique facility/part balance.
+ // A duplicate-key result means another request won the upsert; continue with its row.
+ try {
+  await InventoryBalance.updateOne({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId)},{$setOnInsert:{onHand:0,reserved:0,reorderPoint:0,updatedBy:new Types.ObjectId(c.sub)}},{upsert:true});
+ } catch (error) {
+  if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === 11000)) throw error;
+ }
  const filter:any={tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId)};
  if(d.movementType==='issue')filter.onHand={$gte:d.quantity};
  if(d.movementType==='adjustment'&&d.quantity<0)filter.onHand={$gte:Math.abs(d.quantity)};
