@@ -15,6 +15,7 @@ export interface UserRecord {
   mfaEnabled: boolean;
   mfaSecretEncrypted?: string;
   mfaPendingSecretEncrypted?: string;
+  mfaPendingSecretExpiresAt?: Date;
   mfaRecoveryCodeHashes: string[];
   mfaLastUsedStep: number;
 }
@@ -32,6 +33,7 @@ const userSchema = new Schema<UserRecord>({
   mfaEnabled: { type: Boolean, default: false, required: true },
   mfaSecretEncrypted: { type: String, select: false },
   mfaPendingSecretEncrypted: { type: String, select: false },
+  mfaPendingSecretExpiresAt: { type: Date, select: false },
   mfaRecoveryCodeHashes: { type: [String], default: [], select: false },
   mfaLastUsedStep: { type: Number, default: -1, select: false }
 }, { timestamps: true });
