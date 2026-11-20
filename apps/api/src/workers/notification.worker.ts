@@ -4,6 +4,7 @@ import {Tenant} from '../models/tenant.model.js';
 import {BackgroundJob} from '../models/background-job.model.js';
 import {claimBackgroundJob,completeBackgroundJob,enqueueBackgroundJob,failBackgroundJob} from '../services/background-jobs.service.js';
 import {runOperationsScan} from '../services/operations-scan.service.js';
+import {deliverNotificationEmail} from '../services/notification-delivery.service.js';
 const workerId='forgeops-worker-'+randomUUID();
 let stopping=false;
 let lastScheduleSlot='';
@@ -23,6 +24,7 @@ async function processOne(){
  const job=await claimBackgroundJob(workerId,120000);if(!job)return false;
  try{
   if(job.type==='operations_scan')await runOperationsScan(job.tenantId.toString(),job.payload.facilityIds?.map(id=>id.toString()));
+  else if(job.type==='notification_email'&&job.payload.notificationId)await deliverNotificationEmail(job.payload.notificationId.toString(),job.tenantId.toString());
   await completeBackgroundJob(job._id,workerId);
   console.info('Completed background job',job._id.toString(),job.type,'attempt',job.attempts);
  }catch(error){
