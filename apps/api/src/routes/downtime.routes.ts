@@ -38,7 +38,9 @@ downtimeRouter.post('/events',authorize('owner','admin','manager','technician'),
  if(parsed.data.workOrderId){const wo=await WorkOrder.findOne({_id:parsed.data.workOrderId,tenantId:c.tenantId,assetId:asset._id,facilityId:asset.facilityId}).select('_id');if(!wo){res.status(400).json({error:{code:'WORK_ORDER_ASSET_MISMATCH'}});return;}}
  const open=await DowntimeEvent.findOne({tenantId:c.tenantId,assetId:asset._id,status:'open'}).select('_id');
  if(open){res.status(409).json({error:{code:'ASSET_ALREADY_IN_DOWNTIME',eventId:open._id}});return;}
- const event=await DowntimeEvent.create({...parsed.data,tenantId:new Types.ObjectId(c.tenantId),facilityId:asset.facilityId,assetId:asset._id,workOrderId:parsed.data.workOrderId?new Types.ObjectId(parsed.data.workOrderId):undefined,reportedBy:new Types.ObjectId(c.sub)});
+ let event;
+ try{event=await DowntimeEvent.create({...parsed.data,tenantId:new Types.ObjectId(c.tenantId),facilityId:asset.facilityId,assetId:asset._id,workOrderId:parsed.data.workOrderId?new Types.ObjectId(parsed.data.workOrderId):undefined,reportedBy:new Types.ObjectId(c.sub)});}
+ catch(error){if(typeof error==='object'&&error!==null&&'code' in error&&error.code===11000){res.status(409).json({error:{code:'ASSET_ALREADY_IN_DOWNTIME'}});return;}throw error;}
  await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:asset.facilityId,entityType:'downtime_event',entityId:event._id,action:'created',changes:{cause:event.cause,startedAt:event.startedAt}});
  res.status(201).json({data:{event}});
  }catch(e){next(e);}});
