@@ -115,6 +115,18 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(tamperedChallengeAttempt.status,401);
   assert.equal(tamperedChallengeAttempt.data.error.code,'MFA_CHALLENGE_INVALID_OR_EXPIRED');
 
+  const wrongPurposeChallenge=jwt.sign(
+    {sub:challengeClaims.sub,tenantId:challengeClaims.tenantId,purpose:'access'},
+    process.env.AUTH_ACCESS_TOKEN_SECRET,
+    {algorithm:'HS256',expiresIn:'5m'}
+  );
+  const wrongPurposeAttempt=await call('/api/v1/auth/login/mfa','POST',{
+    challengeToken:wrongPurposeChallenge,
+    code:service.generateTotpCode(secret)
+  },null);
+  assert.equal(wrongPurposeAttempt.status,401);
+  assert.equal(wrongPurposeAttempt.data.error.code,'MFA_CHALLENGE_INVALID_OR_EXPIRED');
+
   const expiredChallenge=jwt.sign(
     {...challengeClaims,exp:Math.floor(Date.now()/1000)-1},
     process.env.AUTH_ACCESS_TOKEN_SECRET,
