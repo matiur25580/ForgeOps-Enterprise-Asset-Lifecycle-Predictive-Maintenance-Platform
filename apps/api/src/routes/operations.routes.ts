@@ -44,6 +44,7 @@ const assetCreateSchema = z.object({
   warrantyExpiresAt: z.coerce.date().optional(),
   purchaseCost: z.number().finite().nonnegative().optional(),
   currency: z.string().trim().length(3).default('USD'),
+  scheduledOperatingHoursPerWeek: z.number().finite().min(0).max(168).optional(),
   parentAssetId: z.string().refine(Types.ObjectId.isValid).optional()
 }).strict();
 
