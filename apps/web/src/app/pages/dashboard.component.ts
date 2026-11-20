@@ -34,6 +34,7 @@ import { Component } from '@angular/core';
         <a class="nav-item" href="/notification-preferences"><span>⚙</span> Delivery preferences</a>
         <a class="nav-item" href="/audit"><span>▤</span> Audit & compliance</a>
         <a class="nav-item" href="/team"><span>♙</span> Team administration</a>
+        <a class="nav-item" href="/security"><span>⛨</span> Account security</a>
         <div class="sidebar-bottom">
           <div class="support-card"><strong>Need a hand?</strong><p>Visit the operations help center.</p><a href="mailto:support&#64;forgeops.example">Get support ↗</a></div>
           <div class="user-profile"><div class="avatar">JD</div><div><strong>Jordan Davis</strong><small>Operations manager</small></div><span class="profile-menu">•••</span></div>
