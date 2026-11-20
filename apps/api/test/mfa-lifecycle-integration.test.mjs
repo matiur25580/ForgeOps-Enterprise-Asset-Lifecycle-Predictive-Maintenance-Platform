@@ -251,7 +251,7 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   const disable=await call('/api/v1/mfa/disable','POST',{
     password:account.password,
-    code:rotation.data.data.recoveryCodes[1]
+    code:concurrentRotation.data.data.recoveryCodes[1]
   });
   assert.equal(disable.status,200);
   assert.equal(disable.data.data.enabled,false);
