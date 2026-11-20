@@ -5,6 +5,7 @@ import { AssetsComponent } from './pages/assets.component';
 import { FacilitiesComponent } from './pages/facilities.component';
 import { DashboardComponent } from './pages/dashboard.component';
 import { MaintenanceComponent } from './pages/maintenance.component';
+import { InventoryComponent } from './pages/inventory.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'assets', component: AssetsComponent, canActivate: [authGuard] },
   { path: 'facilities', component: FacilitiesComponent, canActivate: [authGuard] },
   { path: 'maintenance', component: MaintenanceComponent, canActivate: [authGuard] },
+  { path: 'inventory', component: InventoryComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
