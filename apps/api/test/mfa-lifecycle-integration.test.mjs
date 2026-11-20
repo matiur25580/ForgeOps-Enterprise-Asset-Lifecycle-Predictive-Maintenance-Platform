@@ -393,6 +393,48 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   });
   assert.equal(repeatedLogout.status,204);
 
+  const expiredRefreshToken='expired-refresh-token-regression-test';
+  const expiredRefreshSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(expiredRefreshToken),
+    familyId:'expired-refresh-token-family',
+    expiresAt:new Date(Date.now()-60_000)
+  });
+  const expiredRefreshResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+expiredRefreshToken}
+  });
+  assert.equal(expiredRefreshResponse.status,401);
+  const expiredRefreshBody=await expiredRefreshResponse.json();
+  assert.equal(expiredRefreshBody.error.code,'REFRESH_TOKEN_INVALID');
+  const unchangedExpiredSession=await RefreshSession.findById(expiredRefreshSession._id).select('+tokenHash');
+  assert.ok(unchangedExpiredSession);
+  assert.equal(unchangedExpiredSession.revokedAt,null);
+  assert.equal(unchangedExpiredSession.tokenHash,hashToken(expiredRefreshToken));
+
+  const alreadyRevokedToken='already-revoked-refresh-token-regression-test';
+  const priorRevocation=new Date(Date.now()-5_000);
+  const alreadyRevokedSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(alreadyRevokedToken),
+    familyId:'already-revoked-refresh-token-family',
+    expiresAt:refreshExpiry(),
+    revokedAt:priorRevocation
+  });
+  const revokedRefreshResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+alreadyRevokedToken}
+  });
+  assert.equal(revokedRefreshResponse.status,401);
+  const revokedRefreshBody=await revokedRefreshResponse.json();
+  assert.equal(revokedRefreshBody.error.code,'REFRESH_TOKEN_INVALID');
+  const unchangedRevokedSession=await RefreshSession.findById(alreadyRevokedSession._id).select('+tokenHash');
+  assert.ok(unchangedRevokedSession);
+  assert.equal(unchangedRevokedSession.revokedAt.getTime(),priorRevocation.getTime());
+  assert.equal(unchangedRevokedSession.tokenHash,hashToken(alreadyRevokedToken));
+
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:concurrentRotation.data.data.recoveryCodes[index]
