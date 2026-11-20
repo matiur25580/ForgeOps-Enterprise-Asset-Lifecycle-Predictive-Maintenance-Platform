@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Foundation / planning  
+**Project status:** Phase 2 — Facility & Asset Registry (API implemented; CI verified)  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -84,7 +84,7 @@ MongoDB (Mongoose)
       |
       +-- Tenant-scoped operational data
       +-- Time-series telemetry collections
-      +-- Append-only audit events
+      +-- Domain audit events
 ```
 
 ### Technology choices
@@ -97,9 +97,9 @@ MongoDB (Mongoose)
 | Database | MongoDB, Mongoose |
 | Real-time | Socket.IO |
 | API contract | REST, OpenAPI / Swagger |
-| Authentication | Short-lived access tokens, rotating refresh tokens, MFA |
+| Authentication | Short-lived access tokens, rotating refresh tokens (MFA planned) |
 | Validation | Shared DTO contracts and server-side schema validation |
-| Testing | Jest, Supertest, Angular testing utilities, Playwright |
+| Testing | Node.js test runner, MongoDB integration tests, Angular CLI build (E2E planned) |
 | Delivery | Docker, GitHub Actions, environment-based deployment |
 
 ## 5. Multi-tenancy and security principles
@@ -111,7 +111,7 @@ Security is a core design constraint, not a final polishing task.
 - Role-based access control is combined with resource and facility-level permissions.
 - Passwords are stored using a modern password-hashing algorithm.
 - Refresh tokens are rotated, revocable, and stored securely.
-- MFA is supported for privileged accounts.
+- MFA is planned for privileged accounts; it is not implemented yet.
 - Validate and normalize all untrusted input on the server.
 - Apply rate limits, secure headers, safe CORS policy, and request size limits.
 - Record security-sensitive and business-critical actions in audit events.
@@ -133,23 +133,23 @@ Metric definitions and calculation windows will be documented so dashboards are 
 
 ### Phase 0 — Product and engineering foundation
 - [x] Create the project repository
-- [ ] Define product scope and architecture
-- [ ] Establish monorepo workspace and coding standards
-- [ ] Add Docker-based local development
-- [ ] Add CI checks and environment templates
+- [x] Define product scope and architecture
+- [x] Establish monorepo workspace and coding standards
+- [x] Add Docker-based local development
+- [x] Add CI checks and environment templates
 
 ### Phase 1 — Identity and tenant foundation
-- [ ] Organization onboarding and tenant provisioning
+- [x] Organization onboarding and tenant provisioning
 - [ ] User invitations and account lifecycle
-- [ ] Authentication, refresh-token rotation, and MFA
-- [ ] Roles, permissions, and facility scopes
-- [ ] Tenant-isolation tests
+- [x] Authentication and refresh-token rotation; MFA remains planned
+- [x] Roles, permissions, and facility scopes
+- [x] Tenant-isolation integration tests
 
 ### Phase 2 — Asset and facility management
-- [ ] Facilities, departments, and asset hierarchy
-- [ ] Asset registry and lifecycle status
+- [x] Facility registry and facility-level access scopes; departments remain planned
+- [x] Asset registry and lifecycle status
 - [ ] Asset documents, warranty, and QR identifiers
-- [ ] Search, filters, pagination, and import/export
+- [x] Search, filters, and pagination; import/export remains planned
 
 ### Phase 3 — Maintenance execution
 - [ ] Maintenance requests and work orders
