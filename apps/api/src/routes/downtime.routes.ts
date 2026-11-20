@@ -63,7 +63,7 @@ downtimeRouter.patch('/events/:eventId/verify',authorize('owner','admin','manage
  if(!event){res.status(404).json({error:{code:'DOWNTIME_EVENT_NOT_FOUND'}});return;}
  if(event.status!=='resolved'){res.status(409).json({error:{code:'DOWNTIME_EVENT_NOT_RESOLVED'}});return;}
  if(event.reportedBy.toString()===c.sub){res.status(403).json({error:{code:'SELF_VERIFICATION_FORBIDDEN'}});return;}
- event.verificationStatus=parsed.data.decision;event.verificationNotes=parsed.data.notes;event.verifiedBy=new Types.ObjectId(c.sub);event.verifiedAt=new Date();await event.save();
+ event.verificationStatus=parsed.data.decision;if(parsed.data.notes!==undefined)event.verificationNotes=parsed.data.notes;event.verifiedBy=new Types.ObjectId(c.sub);event.verifiedAt=new Date();await event.save();
  await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:event.facilityId,entityType:'downtime_event',entityId:event._id,action:'updated',changes:{verificationStatus:event.verificationStatus}});
  res.status(200).json({data:{event}});
  }catch(e){next(e);}});
