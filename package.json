@@ -1,0 +1,21 @@
+{
+  "name": "forgeops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise asset lifecycle and predictive maintenance platform",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev:api": "npm run dev --workspace @forgeops/api",
+    "dev:web": "npm run start --workspace @forgeops/web",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "start:api": "npm run start --workspace @forgeops/api"
+  }
+}
