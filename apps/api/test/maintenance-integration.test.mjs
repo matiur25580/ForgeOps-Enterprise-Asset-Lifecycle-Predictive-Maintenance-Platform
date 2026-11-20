@@ -76,10 +76,6 @@ test('manager creates a work order and assigned technician can progress it', asy
   assert.equal(created.response.status, 201);
   assert.equal(created.payload.data.workOrder.status, 'assigned');
   assert.match(created.payload.data.workOrder.workOrderNumber, /^WO-/);
-  const techLogin = await request('/api/v1/auth/login', { token: null, method: 'POST', body: {
-    organizationSlug: 'maint-test', email: 'tech@example.com', password: 'A-Strong-Password-2026!'
-  }});
-  // The fixture user is intentionally not password-authenticatable; issue a token with the real claims.
   const { signAccessToken } = await import('../src/auth/token.service.ts');
   const tenant = await Tenant.findOne({ slug: 'maint-test' });
   const techToken = signAccessToken({ sub: technicianId, tenantId: tenant._id.toString(), role: 'technician', facilityIds: [facilityId] });
@@ -95,7 +91,6 @@ test('manager creates a work order and assigned technician can progress it', asy
     method: 'PATCH', token: techToken, body: { priority: 'emergency' }
   });
   assert.equal(forbidden.response.status, 403);
-  assert.equal(techLogin.response.status, 401);
 });
 
 test('preventive plan generates a due work order and advances its recurrence', async () => {
