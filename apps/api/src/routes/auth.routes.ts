@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
@@ -9,6 +10,8 @@ import { RefreshSession } from '../models/refresh-session.model.js';
 import { Tenant } from '../models/tenant.model.js';
 import { User, type UserRole } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { env } from '../config/env.js';
+import { consumeMfaProof } from '../auth/mfa.service.js';
 
 export const authRouter = Router();
 authRouter.use(rateLimit({
@@ -139,6 +142,16 @@ authRouter.post('/login', async (request, response, next) => {
       return;
     }
 
+    if (user.mfaEnabled) {
+      const challengeToken = jwt.sign(
+        { sub: user._id.toString(), tenantId: user.tenantId.toString(), purpose: 'mfa_login' },
+        env.AUTH_ACCESS_TOKEN_SECRET,
+        { algorithm: 'HS256', expiresIn: '5m' }
+      );
+      response.status(200).json({ data: { mfaRequired: true, challengeToken } });
+      return;
+    }
+
     user.lastLoginAt = new Date();
     await user.save();
     const tokens = await issueSession(user);
@@ -147,6 +160,33 @@ authRouter.post('/login', async (request, response, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+
+const mfaLoginSchema = z.object({ challengeToken: z.string().min(20).max(4096), code: z.string().min(6).max(32) });
+authRouter.post('/login/mfa', async (request, response, next) => {
+  try {
+    const parsed = mfaLoginSchema.safeParse(request.body);
+    if (!parsed.success) { response.status(400).json({ error: { code: 'VALIDATION_ERROR' } }); return; }
+    let claims: { sub: string; tenantId: string; purpose: string };
+    try {
+      const decoded = jwt.verify(parsed.data.challengeToken, env.AUTH_ACCESS_TOKEN_SECRET, { algorithms: ['HS256'] });
+      if (typeof decoded === 'string' || decoded.purpose !== 'mfa_login' || !decoded.sub || !decoded.tenantId) throw new Error('Invalid challenge');
+      claims = decoded as typeof claims;
+    } catch {
+      response.status(401).json({ error: { code: 'MFA_CHALLENGE_INVALID_OR_EXPIRED' } }); return;
+    }
+    const valid = await consumeMfaProof(claims.sub, claims.tenantId, parsed.data.code);
+    if (!valid) { response.status(401).json({ error: { code: 'MFA_CODE_INVALID_OR_ALREADY_USED' } }); return; }
+    const user = await User.findOne({ _id: claims.sub, tenantId: claims.tenantId, status: 'active', mfaEnabled: true });
+    const tenant = await Tenant.findOne({ _id: claims.tenantId, status: 'active' });
+    if (!user || !tenant) { response.status(401).json({ error: { code: 'ACCOUNT_UNAVAILABLE' } }); return; }
+    user.lastLoginAt = new Date();
+    await user.save();
+    const tokens = await issueSession(user);
+    response.cookie(refreshCookie, tokens.refreshToken, cookieOptions);
+    response.status(200).json({ data: { user: publicUser(user), accessToken: tokens.accessToken } });
+  } catch (error) { next(error); }
 });
 
 authRouter.post('/refresh', async (request, response, next) => {
