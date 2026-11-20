@@ -106,6 +106,15 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   const jwt=(await import('jsonwebtoken')).default;
   const challengeClaims=jwt.decode(login.data.data.challengeToken);
+  const tamperedChallengeParts=login.data.data.challengeToken.split('.');
+  tamperedChallengeParts[2]=(tamperedChallengeParts[2][0]==='a'?'b':'a')+tamperedChallengeParts[2].slice(1);
+  const tamperedChallengeAttempt=await call('/api/v1/auth/login/mfa','POST',{
+    challengeToken:tamperedChallengeParts.join('.'),
+    code:service.generateTotpCode(secret)
+  },null);
+  assert.equal(tamperedChallengeAttempt.status,401);
+  assert.equal(tamperedChallengeAttempt.data.error.code,'MFA_CHALLENGE_INVALID_OR_EXPIRED');
+
   const expiredChallenge=jwt.sign(
     {...challengeClaims,exp:Math.floor(Date.now()/1000)-1},
     process.env.AUTH_ACCESS_TOKEN_SECRET,
