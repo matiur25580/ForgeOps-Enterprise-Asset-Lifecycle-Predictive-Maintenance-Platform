@@ -22,6 +22,7 @@ export interface WorkOrderRecord {
   completionNotes?: string;
   sourcePlanId?: Types.ObjectId;
   scheduledFor?: Date;
+  sourceAlertId?: Types.ObjectId;
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
   completedAt?: Date;
@@ -45,6 +46,7 @@ const workOrderSchema = new Schema<WorkOrderRecord>({
   completionNotes: { type: String, trim: true, maxlength: 4000 },
   sourcePlanId: { type: Schema.Types.ObjectId, ref: 'MaintenancePlan' },
   scheduledFor: { type: Date },
+  sourceAlertId: { type: Schema.Types.ObjectId, ref: 'AssetAlert' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   completedAt: { type: Date }
@@ -53,6 +55,7 @@ const workOrderSchema = new Schema<WorkOrderRecord>({
 workOrderSchema.index({ tenantId: 1, workOrderNumber: 1 }, { unique: true });
 workOrderSchema.index({ tenantId: 1, facilityId: 1, status: 1, dueAt: 1 });
 workOrderSchema.index({ tenantId: 1, assignedTo: 1, status: 1 });
+workOrderSchema.index({ tenantId: 1, sourceAlertId: 1 }, { unique: true, partialFilterExpression: { sourceAlertId: { $type: 'objectId' } } });
 workOrderSchema.index(
   { tenantId: 1, sourcePlanId: 1, scheduledFor: 1 },
   { unique: true, partialFilterExpression: { sourcePlanId: { $type: 'objectId' }, scheduledFor: { $type: 'date' } } }
