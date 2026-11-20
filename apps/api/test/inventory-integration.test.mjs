@@ -28,7 +28,7 @@ test('vendor, spare part, receipt and issue maintain a traceable facility stock 
  assert.equal(receipt.response.status,201);assert.equal(receipt.payload.data.balance.onHand,12);assert.equal(receipt.payload.data.auditRecorded,true);
  const work=await request('/api/v1/maintenance/work-orders',{method:'POST',body:{facilityId,assetId,title:'Replace pump filter',type:'corrective',priority:'medium'}});
  assert.equal(work.response.status,201);
- const started=await request('/api/v1/maintenance/work-orders/'+work.payload.data.workOrder._id,{method:'PATCH',body:{status:'in_progress'}});assert.equal(started.response.status,200);
+ const assigned=await request('/api/v1/maintenance/work-orders/'+work.payload.data.workOrder._id,{method:'PATCH',body:{status:'assigned'}});assert.equal(assigned.response.status,200);const started=await request('/api/v1/maintenance/work-orders/'+work.payload.data.workOrder._id,{method:'PATCH',body:{status:'in_progress'}});assert.equal(started.response.status,200);
  const issue=await request('/api/v1/inventory/movements',{method:'POST',body:{facilityId,sparePartId,movementType:'issue',quantity:3,reason:'Parts consumed during work order',workOrderId:work.payload.data.workOrder._id}});
  assert.equal(issue.response.status,201);assert.equal(issue.payload.data.balance.onHand,9);assert.equal(issue.payload.data.auditRecorded,true);
  const balance=await request('/api/v1/inventory/balances?facilityId='+facilityId);
