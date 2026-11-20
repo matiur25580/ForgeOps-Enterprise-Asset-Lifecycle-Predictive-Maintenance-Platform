@@ -12,6 +12,7 @@ import { InspectionsComponent } from './pages/inspections.component';
 import { AnalyticsComponent } from './pages/analytics.component';
 import { DowntimeComponent } from './pages/downtime.component';
 import { FinancialsComponent } from './pages/financials.component';
+import { VendorIntelligenceComponent } from './pages/vendor-intelligence.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -26,6 +27,7 @@ export const routes: Routes = [
   { path: 'analytics', component: AnalyticsComponent, canActivate: [authGuard] },
   { path: 'downtime', component: DowntimeComponent, canActivate: [authGuard] },
   { path: 'financials', component: FinancialsComponent, canActivate: [authGuard] },
+  { path: 'vendors', component: VendorIntelligenceComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
