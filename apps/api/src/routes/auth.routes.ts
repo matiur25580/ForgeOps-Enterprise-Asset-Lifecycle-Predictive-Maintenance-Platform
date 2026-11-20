@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import { Router } from 'express';\nimport rateLimit from 'express-rate-limit';
+import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { env } from '../config/env.js';
@@ -9,7 +9,8 @@ import { Tenant } from '../models/tenant.model.js';
 import { User } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
 
-export const authRouter = Router();\nauthRouter.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }));
+export const authRouter = Router();
+authRouter.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }));
 const refreshCookie = 'forgeops_refresh';
 const cookieOptions = {
   httpOnly: true,
