@@ -13,7 +13,7 @@ Authenticated users can manage their own preferences:
 
 Settings include email opt-in, per-category switches (SLA, contract renewal, critical asset alerts and maintenance), timezone-aware quiet hours and an IANA timezone. Preferences are tenant/user scoped. Email is disabled by default.
 
-### Delivery audit
+### SLA escalation policy\n\nTenant managers and administrators can inspect the policy with `GET /api/v1/notification-settings/escalation-policy`; owners and administrators can update it with `PUT /api/v1/notification-settings/escalation-policy`. The default policy escalates an overdue assigned work order after four hours to tenant owners/administrators and managers assigned to the affected facility. The threshold can be configured from 15 minutes to seven days, and each recipient receives a deduplicated management escalation notification.\n\n### Delivery audit
 
 - `GET /api/v1/notification-settings/deliveries?page=1&limit=20`
 
@@ -49,4 +49,4 @@ Quiet-hours suppression is recorded as skipped rather than silently discarded. T
 - Preference and delivery history endpoints are scoped to the authenticated tenant and user.
 - Email is disabled by default; category preferences default to enabled only after the user explicitly enables email.
 - Delivery is at-least-once at the job layer. SMTP providers may accept a message before a network timeout; operators should monitor duplicate-risk cases.
-- SMS, push, digest emails, user-configurable escalation timers and delivery-provider webhooks remain future work.
+- SMS, push, digest emails, SMS, push, digest emails, delivery-provider webhooks and deferred quiet-hour delivery remain future work.
