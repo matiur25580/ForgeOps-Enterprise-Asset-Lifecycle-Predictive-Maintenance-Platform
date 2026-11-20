@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 5 — authenticated operations, MRO inventory and procurement lifecycle workflows  
+**Project status:** Phase 6 — authenticated operations, procurement lifecycle and simulated telemetry health monitoring  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -163,6 +163,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Partial/final goods receipt notes with over-receipt protection
 - [x] Accepted goods posted to facility stock and stock movement ledger; damaged/quarantined goods excluded from on-hand stock
 - [x] Procurement workspace for requisitions, purchase orders and GRNs
+- [x] Simulated sensor readings and transparent asset health heuristic
 - [x] Angular maintenance workspace for work order queue and PM plan management
 
 ### Phase 3 — Maintenance execution
@@ -179,9 +180,11 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [ ] Inspection templates, findings, and corrective actions
 
 ### Phase 5 — Telemetry and operational intelligence
-- [ ] Simulated telemetry ingestion
-- [ ] Threshold rules and alert lifecycle
-- [ ] Asset health indicators and trend charts
+- [x] Simulated telemetry ingestion with tenant-scoped time-series readings
+- [x] Explainable threshold-based asset health indicators
+- [x] Authenticated telemetry and health monitoring workspace
+- [ ] Configurable threshold rules and alert lifecycle
+- [ ] Asset health trend charts
 - [ ] Facility operations dashboard
 - [ ] MTTR, MTBF, downtime, and cost analytics
 
