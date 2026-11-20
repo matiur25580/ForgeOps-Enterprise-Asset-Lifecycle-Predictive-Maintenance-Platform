@@ -58,7 +58,10 @@ npm run build
 
 ## Notes
 
-- The dashboard currently uses clearly labelled illustrative preview data; it is not connected to production APIs yet.
+- The overview dashboard still contains clearly labelled illustrative preview data. The Asset Registry and Facilities screens use authenticated live API endpoints.
+- The web API base URL is configured in `apps/web/src/environments/environment.ts` (default: `http://localhost:4000/api/v1`). Update it for a deployed API.
+- Open `http://localhost:4200/login` to sign in with an existing organization slug, email, and password, or create a workspace. The refresh session is stored in an HTTP-only cookie; the short-lived access token remains in application memory.
+- For local browser access, keep the API CORS origin set to `http://localhost:4200` and use HTTPS in production.
 - Do not commit `.env`, credentials, production data, or real access tokens.
 - The access-token secret in `.env.example` is a placeholder, not a production-ready secret.
 - MongoDB is the only container started by the current Compose file. The API and web app run through the local Node toolchain.
