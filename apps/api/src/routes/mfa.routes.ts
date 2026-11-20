@@ -93,7 +93,11 @@ mfaRouter.post('/recovery-codes/regenerate',mfaLimiter,async(req,res,next)=>{
     if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR'}});return;}
     if(!await consumeMfaProof(req.auth!.sub,req.auth!.tenantId,parsed.data.code)){res.status(401).json({error:{code:'MFA_CODE_INVALID_OR_ALREADY_USED'}});return;}
     const codes=createRecoveryCodes();
-    await User.updateOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,mfaEnabled:true},{$set:{mfaRecoveryCodeHashes:codes.map(hashRecoveryCode)}});
+    const rotation=await User.updateOne(
+      {_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active',mfaEnabled:true},
+      {$set:{mfaRecoveryCodeHashes:codes.map(hashRecoveryCode)}}
+    );
+    if(rotation.modifiedCount!==1){res.status(409).json({error:{code:'MFA_STATE_CHANGED'}});return;}
     res.status(200).json({data:{recoveryCodes:codes,warning:'Previous recovery codes are now invalid. Store this new set securely.'}});
   }catch(error){next(error);}
 });
