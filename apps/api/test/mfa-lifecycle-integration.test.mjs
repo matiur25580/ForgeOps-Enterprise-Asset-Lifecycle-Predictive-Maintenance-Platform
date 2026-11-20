@@ -333,6 +333,38 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(rotatedAfterReuse.status,401);
   assert.equal(rotatedAfterReuseBody.error.code,'REFRESH_TOKEN_INVALID');
 
+  const concurrentRefreshToken='concurrent-refresh-race-regression-token';
+  const concurrentRefreshSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(concurrentRefreshToken),
+    familyId:'concurrent-refresh-race-family',
+    expiresAt:refreshExpiry()
+  });
+  const concurrentRefreshes=await Promise.all([0,1].map(()=>fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+concurrentRefreshToken}
+  })));
+  assert.deepEqual(concurrentRefreshes.map(result=>result.status).sort(),[200,401]);
+  const successfulRefresh=concurrentRefreshes.find(result=>result.status===200);
+  const rejectedRefresh=concurrentRefreshes.find(result=>result.status===401);
+  assert.ok(successfulRefresh);
+  assert.ok(rejectedRefresh);
+  const successfulRefreshCookie=successfulRefresh.headers.get('set-cookie')??'';
+  const successfulRefreshToken=successfulRefreshCookie.match(/forgeops_refresh=([^;]+)/)?.[1];
+  assert.ok(successfulRefreshToken);
+  const concurrentRefreshBody=await rejectedRefresh.json();
+  assert.equal(concurrentRefreshBody.error.code,'REFRESH_TOKEN_INVALID');
+  const revokedConcurrentRefreshSession=await RefreshSession.findById(concurrentRefreshSession._id);
+  assert.ok(revokedConcurrentRefreshSession.revokedAt);
+  const refreshAfterConcurrentReuse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+successfulRefreshToken}
+  });
+  assert.equal(refreshAfterConcurrentReuse.status,401);
+  const refreshAfterConcurrentReuseBody=await refreshAfterConcurrentReuse.json();
+  assert.equal(refreshAfterConcurrentReuseBody.error.code,'REFRESH_TOKEN_INVALID');
+
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:concurrentRotation.data.data.recoveryCodes[index]
