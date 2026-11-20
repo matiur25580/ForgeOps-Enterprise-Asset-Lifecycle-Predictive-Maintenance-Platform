@@ -21,6 +21,7 @@ export interface AssetRecord {
   warrantyExpiresAt?: Date;
   purchaseCost?: number;
   currency: string;
+  scheduledOperatingHoursPerWeek?: number;
   parentAssetId?: Types.ObjectId;
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
@@ -49,6 +50,7 @@ const assetSchema = new Schema<AssetRecord>({
   warrantyExpiresAt: { type: Date },
   purchaseCost: { type: Number, min: 0 },
   currency: { type: String, default: 'USD', uppercase: true, minlength: 3, maxlength: 3, required: true },
+  scheduledOperatingHoursPerWeek: { type: Number, min: 0, max: 168 },
   parentAssetId: { type: Schema.Types.ObjectId, ref: 'Asset' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
