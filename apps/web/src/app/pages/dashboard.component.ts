@@ -21,6 +21,7 @@ import { Component } from '@angular/core';
         <a class="nav-item" href="/telemetry"><span>⌁</span> Telemetry & health</a>
         <a class="nav-item" href="/inspections"><span>☑</span> Inspections & compliance</a>
         <a class="nav-item" href="/downtime"><span>◴</span> Downtime management</a>
+        <a class="nav-item" href="/financials"><span>₹</span> Asset financials & TCO</a>
         <a class="nav-item" href="/maintenance"><span>◷</span> Work orders</a>
         <a class="nav-item" href="/maintenance"><span>⌁</span> Maintenance plans</a>
         <a class="nav-item" href="/assets"><span>▤</span> Inventory</a>
