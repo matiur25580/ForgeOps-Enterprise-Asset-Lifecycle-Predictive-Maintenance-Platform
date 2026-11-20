@@ -25,6 +25,8 @@ export class InspectionsComponent implements OnInit{
  showTemplate=false;saving=false;error='';
  templateDraft={code:'SAFETY-PUMP-01',title:'Rotating equipment safety inspection',category:'safety',facilityId:'',itemsText:'Emergency stop is accessible\nGuards are fitted and secure\nNo abnormal leakage or noise'};
  runDraft={facilityId:'',assetId:'',templateId:''};
+ scheduleDraft={title:'Monthly safety inspection',facilityId:'',assetId:'',templateId:'',intervalDays:30,nextDueAt:new Date().toISOString().slice(0,10)};
+ scheduleAssets:any[]=[];
  scopedAssets:any[]=[];
  ngOnInit(){this.load();}
  load(){this.api.get<any>('/operations/facilities').subscribe({next:r=>this.facilities=r.data.facilities||[],error:e=>this.error=this.message(e)});this.api.get<any>('/operations/assets').subscribe({next:r=>this.assets=r.data.assets||[],error:e=>this.error=this.message(e)});this.api.get<any>('/inspections/templates').subscribe({next:r=>this.templates=r.data.templates||[],error:e=>this.error=this.message(e)});this.loadHistory();this.loadSchedules();}
