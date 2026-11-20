@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 10 — live operations analytics and maintenance KPI reporting  
+**Project status:** Phase 11 — verified downtime, asset availability and maintenance cost accounting  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -197,6 +197,10 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Work-order backlog, throughput and status/priority breakdowns
 - [x] Transparent MTTR/MTBF proxies and parts issue cost reporting
 - [x] Live Angular operations analytics workspace
+- [x] Auditable downtime event lifecycle with independent verification
+- [x] Verified, schedule-weighted asset availability calculation
+- [x] Work-order labor and external service cost capture
+- [x] Multi-currency maintenance cost breakdowns without false FX aggregation
 - [ ] Asset health trend charts
 - [ ] Facility operations dashboard
 - [ ] MTTR, MTBF, downtime, and cost analytics
@@ -210,7 +214,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 
 ## Procurement consistency note
 
-Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).\n\n## Inspection and compliance\n\nReusable checklist templates, inspection evidence, failed findings and corrective-work-order linkage are documented in [inspections and compliance](docs/operations/inspections-and-compliance.md). Recurring schedules, independent review and compliance summaries are covered in [inspection scheduling, review and reporting](docs/operations/inspection-scheduling-review-and-reporting.md).\n\n## Operations analytics\n\nThe live analytics workspace and KPI methodology are documented in [operations analytics](docs/analytics/operations-analytics.md). MTTR/MTBF are explicitly labelled work-order-derived proxies; verified equipment availability and downtime require dedicated downtime events and operating-hour calendars.
+Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).\n\n## Inspection and compliance\n\nReusable checklist templates, inspection evidence, failed findings and corrective-work-order linkage are documented in [inspections and compliance](docs/operations/inspections-and-compliance.md). Recurring schedules, independent review and compliance summaries are covered in [inspection scheduling, review and reporting](docs/operations/inspection-scheduling-review-and-reporting.md).\n\n## Operations analytics\n\nThe live analytics workspace and KPI methodology are documented in [operations analytics](docs/analytics/operations-analytics.md). MTTR/MTBF are explicitly labelled work-order-derived proxies. Verified availability now uses independently reviewed downtime events and configured weekly operating hours; maintenance costs are grouped by currency without conversion.
 
 ## 8. Local development
 
