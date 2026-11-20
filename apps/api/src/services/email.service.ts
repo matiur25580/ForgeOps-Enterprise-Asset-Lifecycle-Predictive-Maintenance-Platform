@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer';
+import nodemailer, {type Transporter} from 'nodemailer';
 import {env} from '../config/env.js';
-let transport: nodemailer.Transporter | null=null;
+let transport: Transporter | null=null;
 export function emailTransportConfigured(){return Boolean(env.SMTP_HOST&&env.SMTP_FROM);}
 function getTransport(){
  if(!emailTransportConfigured())return null;
