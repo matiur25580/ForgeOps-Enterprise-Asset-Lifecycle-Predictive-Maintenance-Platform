@@ -1,5 +1,6 @@
-import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomInt, createHash, timingSafeEqual } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { env } from '../config/env.js';
+import { User } from '../models/user.model.js';
 
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function encryptionKey():Buffer{return createHash('sha256').update('forgeops:mfa:encryption:v1:').update(env.AUTH_ACCESS_TOKEN_SECRET).digest();}
@@ -55,4 +56,20 @@ export function recoveryCodeMatches(stored:string[],code:string):string|null{
 export function otpAuthUri(secret:string,email:string,issuer='ForgeOps'):string{
   const label=encodeURIComponent(issuer+':'+email);
   return 'otpauth://totp/'+label+'?secret='+secret+'&issuer='+encodeURIComponent(issuer)+'&algorithm=SHA1&digits=6&period=30';
+}
+
+export async function consumeMfaProof(userId:string,tenantId:string,code:string):Promise<boolean>{
+  const user=await User.findOne({_id:userId,tenantId,status:'active',mfaEnabled:true})
+    .select('+mfaSecretEncrypted +mfaRecoveryCodeHashes +mfaLastUsedStep');
+  if(!user)return false;
+  const recoveryHash=recoveryCodeMatches(user.mfaRecoveryCodeHashes,code);
+  if(recoveryHash){
+    const result=await User.updateOne({_id:user._id,tenantId,mfaEnabled:true,mfaRecoveryCodeHashes:recoveryHash},{$pull:{mfaRecoveryCodeHashes:recoveryHash}});
+    return result.modifiedCount===1;
+  }
+  if(!user.mfaSecretEncrypted)return false;
+  const step=verifyTotp(decryptSecret(user.mfaSecretEncrypted),code,Date.now(),user.mfaLastUsedStep??-1);
+  if(step===null)return false;
+  const result=await User.updateOne({_id:user._id,tenantId,mfaEnabled:true,mfaLastUsedStep:{$lt:step}},{$set:{mfaLastUsedStep:step}});
+  return result.modifiedCount===1;
 }
