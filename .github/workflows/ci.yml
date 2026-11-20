@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Install and build
+    name: Install, test and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,6 +26,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Run API authentication regression tests
+        run: npm test
       - name: Type-check API and compile Angular app
         run: npm run typecheck
       - name: Build all workspaces
