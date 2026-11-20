@@ -347,6 +347,77 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(rotatedAfterReuse.status,401);
   assert.equal(rotatedAfterReuseBody.error.code,'REFRESH_TOKEN_INVALID');
 
+  // Replaying one family's retired token must never revoke an independent family.
+  const isolatedFamilyAToken='independent-refresh-family-a-token';
+  const isolatedFamilyBToken='independent-refresh-family-b-token';
+  const [isolatedFamilyA,isolatedFamilyB]=await Promise.all([
+    RefreshSession.create({
+      userId:inactiveUser._id,
+      tenantId:inactiveUser.tenantId,
+      tokenHash:hashToken(isolatedFamilyAToken),
+      familyId:'independent-refresh-family-a',
+      expiresAt:refreshExpiry()
+    }),
+    RefreshSession.create({
+      userId:inactiveUser._id,
+      tenantId:inactiveUser.tenantId,
+      tokenHash:hashToken(isolatedFamilyBToken),
+      familyId:'independent-refresh-family-b',
+      expiresAt:refreshExpiry()
+    })
+  ]);
+  const isolatedFamilyARefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+isolatedFamilyAToken}
+  });
+  assert.equal(isolatedFamilyARefresh.status,200);
+  const isolatedFamilyANewToken=(isolatedFamilyARefresh.headers.get('set-cookie')??'').match(/forgeops_refresh=([^;]+)/)?.[1];
+  assert.ok(isolatedFamilyANewToken);
+  const isolatedFamilyAReplay=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+isolatedFamilyAToken}
+  });
+  assert.equal(isolatedFamilyAReplay.status,401);
+  const isolatedFamilyAAfterReplay=await RefreshSession.findById(isolatedFamilyA._id);
+  const isolatedFamilyBAfterReplay=await RefreshSession.findById(isolatedFamilyB._id).select('+tokenHash');
+  assert.ok(isolatedFamilyAAfterReplay.revokedAt);
+  assert.equal(isolatedFamilyBAfterReplay.revokedAt,null);
+  assert.equal(isolatedFamilyBAfterReplay.tokenHash,hashToken(isolatedFamilyBToken));
+  const isolatedFamilyBRefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+isolatedFamilyBToken}
+  });
+  assert.equal(isolatedFamilyBRefresh.status,200);
+  const isolatedFamilyBRotated=await RefreshSession.findById(isolatedFamilyB._id).select('+tokenHash');
+  assert.equal(isolatedFamilyBRotated.revokedAt,null);
+  assert.notEqual(isolatedFamilyBRotated.tokenHash,hashToken(isolatedFamilyBToken));
+
+  // A session whose tenant does not own its user must not mint an access token.
+  const {Tenant}=await import('../src/models/tenant.model.ts');
+  const foreignTenant=await Tenant.create({
+    name:'Refresh Isolation Foreign Tenant',
+    slug:'refresh-isolation-foreign-tenant'
+  });
+  const mismatchedTenantToken='refresh-session-cross-tenant-mismatch-token';
+  const mismatchedTenantSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:foreignTenant._id,
+    tokenHash:hashToken(mismatchedTenantToken),
+    familyId:'refresh-session-cross-tenant-mismatch-family',
+    expiresAt:refreshExpiry()
+  });
+  const mismatchedTenantRefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+mismatchedTenantToken}
+  });
+  const mismatchedTenantBody=await mismatchedTenantRefresh.json();
+  assert.equal(mismatchedTenantRefresh.status,401);
+  assert.equal(mismatchedTenantBody.error.code,'ACCOUNT_UNAVAILABLE');
+  assert.equal(mismatchedTenantBody.data,undefined);
+  assert.match(mismatchedTenantRefresh.headers.get('set-cookie')??'',/Max-Age=0/i);
+  const revokedMismatchedTenantSession=await RefreshSession.findById(mismatchedTenantSession._id);
+  assert.ok(revokedMismatchedTenantSession.revokedAt);
+
   const concurrentRefreshToken='concurrent-refresh-race-regression-token';
   const concurrentRefreshSession=await RefreshSession.create({
     userId:inactiveUser._id,
