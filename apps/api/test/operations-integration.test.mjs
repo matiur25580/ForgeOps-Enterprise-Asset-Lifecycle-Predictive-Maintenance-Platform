@@ -134,6 +134,15 @@ test('facility and asset lifecycle APIs enforce tenant isolation and emit audit 
   assert.equal(assetResponse.status, 201);
   const assetId = assetPayload.data.asset._id;
 
+  // Optional serial numbers must not collide through a sparse compound index.
+  const assetWithoutSerial = await post('/api/v1/operations/assets', {
+    facilityId,
+    assetTag: 'VALVE-002',
+    name: 'Pressure Isolation Valve',
+    category: 'valves'
+  }, ownerA.accessToken);
+  assert.equal(assetWithoutSerial.status, 201);
+
   const list = await get('/api/v1/operations/assets?q=PUMP-001&criticality=critical', ownerA.accessToken);
   const listPayload = await list.json();
   assert.equal(list.status, 200);
