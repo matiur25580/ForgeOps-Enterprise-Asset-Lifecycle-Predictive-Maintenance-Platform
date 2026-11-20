@@ -29,7 +29,10 @@ const workOrderCreateSchema = z.object({
   assignedTo: z.string().refine(objectId).optional(),
   scheduledStart: z.coerce.date().optional(),
   dueAt: z.coerce.date().optional(),
-  estimatedHours: z.number().finite().min(0).max(10000).optional()
+  estimatedHours: z.number().finite().min(0).max(10000).optional(),
+  laborCost: z.number().finite().min(0).max(100000000).optional(),
+  externalServiceCost: z.number().finite().min(0).max(100000000).optional(),
+  costCurrency: z.string().trim().length(3).default('USD')
 }).strict();
 
 const workOrderUpdateSchema = z.object({
@@ -42,7 +45,10 @@ const workOrderUpdateSchema = z.object({
   dueAt: z.coerce.date().nullable().optional(),
   estimatedHours: z.number().finite().min(0).max(10000).optional(),
   actualHours: z.number().finite().min(0).max(10000).optional(),
-  completionNotes: z.string().trim().max(4000).optional()
+  completionNotes: z.string().trim().max(4000).optional(),
+  laborCost: z.number().finite().min(0).max(100000000).optional(),
+  externalServiceCost: z.number().finite().min(0).max(100000000).optional(),
+  costCurrency: z.string().trim().length(3).optional()
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field must be provided.');
 
 const planCreateSchema = z.object({
