@@ -249,12 +249,16 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(stillEnabled.status,200);
   assert.equal(stillEnabled.data.data.enabled,true);
 
-  const disable=await call('/api/v1/mfa/disable','POST',{
+  const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
-    code:concurrentRotation.data.data.recoveryCodes[1]
-  });
-  assert.equal(disable.status,200);
-  assert.equal(disable.data.data.enabled,false);
+    code:concurrentRotation.data.data.recoveryCodes[index]
+  })));
+  assert.deepEqual(concurrentDisables.map(result=>result.status).sort(),[200,409]);
+  const successfulDisable=concurrentDisables.find(result=>result.status===200);
+  const rejectedDisable=concurrentDisables.find(result=>result.status===409);
+  assert.ok(successfulDisable);
+  assert.equal(successfulDisable.data.data.enabled,false);
+  assert.equal(rejectedDisable.data.error.code,'MFA_STATE_CHANGED');
 
   const finalStatus=await call('/api/v1/mfa/status');
   assert.equal(finalStatus.status,200);
