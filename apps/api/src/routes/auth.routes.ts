@@ -139,16 +139,20 @@ authRouter.post('/refresh', async (request, response, next) => {
     }
 
     const tokenHash = hashToken(token);
+    const replacementRefreshToken = createRefreshToken();
+    const replacementHash = hashToken(replacementRefreshToken);
+
+    // Compare-and-swap: only one concurrent request can rotate the current token.
     const session = await RefreshSession.findOneAndUpdate(
       { tokenHash, revokedAt: null, expiresAt: { $gt: new Date() } },
-      { $set: { revokedAt: new Date() } },
-      { new: false }
-    ).select('+tokenHash');
+      { $set: { tokenHash: replacementHash }, $addToSet: { usedTokenHashes: tokenHash } },
+      { new: true }
+    ).select('+tokenHash +usedTokenHashes');
 
     if (!session) {
-      const previous = await RefreshSession.findOne({ tokenHash }).select('+tokenHash');
+      const previous = await RefreshSession.findOne({ usedTokenHashes: tokenHash }).select('+usedTokenHashes');
       if (previous) {
-        await RefreshSession.updateMany({ familyId: previous.familyId, revokedAt: null }, { $set: { revokedAt: new Date() } });
+        await RefreshSession.updateOne({ _id: previous._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
       }
       response.clearCookie(refreshCookie, cookieOptions);
       response.status(401).json({ error: { code: 'REFRESH_TOKEN_INVALID', message: 'Session expired or refresh token reuse was detected. Please sign in again.' } });
@@ -158,16 +162,20 @@ authRouter.post('/refresh', async (request, response, next) => {
     const user = await User.findOne({ _id: session.userId, tenantId: session.tenantId, status: 'active' });
     const tenant = await Tenant.findOne({ _id: session.tenantId, status: 'active' });
     if (!user || !tenant) {
-      await RefreshSession.updateMany({ familyId: session.familyId, revokedAt: null }, { $set: { revokedAt: new Date() } });
+      await RefreshSession.updateOne({ _id: session._id }, { $set: { revokedAt: new Date() } });
       response.clearCookie(refreshCookie, cookieOptions);
       response.status(401).json({ error: { code: 'ACCOUNT_UNAVAILABLE' } });
       return;
     }
 
-    const replacement = await issueSession(user, session.familyId);
-    await RefreshSession.updateOne({ _id: session._id }, { $set: { replacedByHash: hashToken(replacement.refreshToken) } });
-    response.cookie(refreshCookie, replacement.refreshToken, cookieOptions);
-    response.status(200).json({ data: { accessToken: replacement.accessToken } });
+    const accessToken = signAccessToken({
+      sub: user.id,
+      tenantId: user.tenantId.toString(),
+      role: user.role,
+      facilityIds: user.facilityIds.map((id) => id.toString())
+    });
+    response.cookie(refreshCookie, replacementRefreshToken, cookieOptions);
+    response.status(200).json({ data: { accessToken } });
   } catch (error) {
     next(error);
   }
