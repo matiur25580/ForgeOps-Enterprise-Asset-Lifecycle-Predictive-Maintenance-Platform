@@ -236,13 +236,14 @@ operationsRouter.post('/assets', authorize('owner', 'admin', 'manager'), async (
 
 operationsRouter.get('/assets/:assetId/audit', async (request, response, next) => {
   try {
-    if (!Types.ObjectId.isValid(request.params.assetId)) {
+    const assetId = request.params.assetId;
+    if (typeof assetId !== 'string' || !Types.ObjectId.isValid(assetId)) {
       response.status(400).json({ error: { code: 'INVALID_ASSET_ID' } });
       return;
     }
     const claims = claimsFor(request);
     const asset = await Asset.findOne({
-      _id: request.params.assetId,
+      _id: assetId,
       tenantId: claims.tenantId,
       archivedAt: null,
       ...(isTenantAdministrator(claims) ? {} : { facilityId: { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) } })
@@ -269,7 +270,7 @@ operationsRouter.get('/assets/:assetId', async (request, response, next) => {
     }
     const claims = claimsFor(request);
     const filter: FilterQuery<AssetRecord> = {
-      _id: request.params.assetId,
+      _id: assetId,
       tenantId: claims.tenantId,
       archivedAt: null
     };
@@ -363,7 +364,8 @@ operationsRouter.patch('/assets/:assetId', authorize('owner', 'admin', 'manager'
 
 operationsRouter.delete('/assets/:assetId', authorize('owner', 'admin', 'manager'), async (request, response, next) => {
   try {
-    if (!Types.ObjectId.isValid(request.params.assetId)) {
+    const assetId = request.params.assetId;
+    if (typeof assetId !== 'string' || !Types.ObjectId.isValid(assetId)) {
       response.status(400).json({ error: { code: 'INVALID_ASSET_ID' } });
       return;
     }
