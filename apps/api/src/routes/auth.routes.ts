@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Router } from 'express';
+import { Router } from 'express';\nimport rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { env } from '../config/env.js';
@@ -9,7 +9,7 @@ import { Tenant } from '../models/tenant.model.js';
 import { User } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
 
-export const authRouter = Router();
+export const authRouter = Router();\nauthRouter.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }));
 const refreshCookie = 'forgeops_refresh';
 const cookieOptions = {
   httpOnly: true,
@@ -25,7 +25,7 @@ const registerSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(254),
-  password: z.string().min(12).max(128)
+  password: z.string().min(12).max(128).refine((value) => Buffer.byteLength(value, 'utf8') <= 72, 'Password must not exceed 72 UTF-8 bytes.')
 });
 
 const loginSchema = z.object({
@@ -41,12 +41,12 @@ function publicUser(user: { id: string; tenantId: { toString(): string }; email:
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    role: user.role,
+    role: user.role as 'owner' | 'admin' | 'manager' | 'technician' | 'viewer',
     facilityIds: user.facilityIds.map((id) => id.toString())
   };
 }
 
-async function issueSession(user: { id: string; tenantId: { toString(): string }; role: 'owner' | 'admin' | 'manager' | 'technician' | 'viewer'; facilityIds: { toString(): string }[] }, familyId = createFamilyId()) {
+async function issueSession(user: { id: string; tenantId: { toString(): string }; role: string; facilityIds: { toString(): string }[] }, familyId = createFamilyId()) {
   const refreshToken = createRefreshToken();
   const tokenHash = hashToken(refreshToken);
   await RefreshSession.create({
