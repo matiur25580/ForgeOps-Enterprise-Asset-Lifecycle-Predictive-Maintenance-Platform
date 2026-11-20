@@ -233,6 +233,32 @@ operationsRouter.post('/assets', authorize('owner', 'admin', 'manager'), async (
   } catch (error) { next(error); }
 });
 
+operationsRouter.get('/assets/:assetId/audit', async (request, response, next) => {
+  try {
+    if (!Types.ObjectId.isValid(request.params.assetId)) {
+      response.status(400).json({ error: { code: 'INVALID_ASSET_ID' } });
+      return;
+    }
+    const claims = claimsFor(request);
+    const asset = await Asset.findOne({
+      _id: request.params.assetId,
+      tenantId: claims.tenantId,
+      archivedAt: null,
+      ...(isTenantAdministrator(claims) ? {} : { facilityId: { $in: claims.facilityIds } })
+    }).select('_id');
+    if (!asset) {
+      response.status(404).json({ error: { code: 'ASSET_NOT_FOUND' } });
+      return;
+    }
+    const events = await AuditEvent.find({
+      tenantId: claims.tenantId,
+      entityType: 'asset',
+      entityId: asset._id
+    }).sort({ occurredAt: -1 }).limit(100).lean();
+    response.status(200).json({ data: { events } });
+  } catch (error) { next(error); }
+});
+
 operationsRouter.get('/assets/:assetId', async (request, response, next) => {
   try {
     if (!Types.ObjectId.isValid(request.params.assetId)) {
