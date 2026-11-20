@@ -11,7 +11,14 @@ import { User, type UserRole } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 export const authRouter = Router();
-authRouter.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }));
+authRouter.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Keep integration tests deterministic; production requests remain throttled.
+  skip: () => env.NODE_ENV === 'test'
+}));
 const refreshCookie = 'forgeops_refresh';
 const cookieOptions = {
   httpOnly: true,
