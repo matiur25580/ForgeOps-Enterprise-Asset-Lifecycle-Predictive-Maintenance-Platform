@@ -30,7 +30,7 @@ export interface WorkOrderRecord {
   completedAt?: Date;
   laborCost?: number;
   externalServiceCost?: number;
-  costCurrency: string;
+  costCurrency?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
