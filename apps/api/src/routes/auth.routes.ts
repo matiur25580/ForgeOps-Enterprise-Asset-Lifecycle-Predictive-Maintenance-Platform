@@ -10,7 +10,6 @@ import { RefreshSession } from '../models/refresh-session.model.js';
 import { Tenant } from '../models/tenant.model.js';
 import { User, type UserRole } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
-import { env } from '../config/env.js';
 import { consumeMfaProof } from '../auth/mfa.service.js';
 
 export const authRouter = Router();
