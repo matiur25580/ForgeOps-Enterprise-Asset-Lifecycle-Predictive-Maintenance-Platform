@@ -244,7 +244,7 @@ operationsRouter.get('/assets/:assetId/audit', async (request, response, next) =
       _id: request.params.assetId,
       tenantId: claims.tenantId,
       archivedAt: null,
-      ...(isTenantAdministrator(claims) ? {} : { facilityId: { $in: claims.facilityIds } })
+      ...(isTenantAdministrator(claims) ? {} : { facilityId: { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) } })
     }).select('_id');
     if (!asset) {
       response.status(404).json({ error: { code: 'ASSET_NOT_FOUND' } });
@@ -272,7 +272,7 @@ operationsRouter.get('/assets/:assetId', async (request, response, next) => {
       archivedAt: null
     };
     if (!isTenantAdministrator(claims)) {
-      filter.facilityId = { $in: claims.facilityIds };
+      filter.facilityId = { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) };
     }
     const asset = await Asset.findOne(filter).populate('facilityId', 'code name').lean();
     if (!asset) {
@@ -370,7 +370,7 @@ operationsRouter.delete('/assets/:assetId', authorize('owner', 'admin', 'manager
       tenantId: claims.tenantId,
       archivedAt: null
     };
-    if (!isTenantAdministrator(claims)) filter.facilityId = { $in: claims.facilityIds };
+    if (!isTenantAdministrator(claims)) filter.facilityId = { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) };
     const asset = await Asset.findOneAndUpdate(
       filter,
       { $set: { archivedAt: new Date(), updatedBy: new Types.ObjectId(claims.sub) } },
