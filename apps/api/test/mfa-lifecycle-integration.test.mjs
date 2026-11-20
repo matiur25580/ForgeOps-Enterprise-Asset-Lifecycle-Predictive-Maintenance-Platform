@@ -135,6 +135,12 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(statusAfterConcurrentUse.status,200);
   assert.equal(statusAfterConcurrentUse.data.data.recoveryCodesRemaining,9);
 
+  const rejectedRotation=await call('/api/v1/mfa/recovery-codes/regenerate','POST',{code:'000000'});
+  assert.equal(rejectedRotation.status,401);
+  assert.equal(rejectedRotation.data.error.code,'MFA_CODE_INVALID_OR_ALREADY_USED');
+  const statusAfterRejectedRotation=await call('/api/v1/mfa/status');
+  assert.equal(statusAfterRejectedRotation.data.data.recoveryCodesRemaining,9);
+
   const rotation=await call('/api/v1/mfa/recovery-codes/regenerate','POST',{code:oldCodes[2]});
   assert.equal(rotation.status,200);
   assert.equal(rotation.data.data.recoveryCodes.length,10);
