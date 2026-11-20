@@ -1,0 +1,19 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: forgeops-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: forgeops
+    volumes:
+      - forgeops_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  forgeops_mongodb_data:
