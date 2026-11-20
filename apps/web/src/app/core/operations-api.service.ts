@@ -60,7 +60,11 @@ export class OperationsApiService {
     return this.http.delete<T>(`${API_BASE}${path}`, { headers: this.headers() });
   }
 
-  download(path: string): Observable<Blob> {\n    return this.http.get(`${API_BASE}${path}`, { headers: this.headers(), responseType: 'blob' });\n  }\n\n  private headers(): HttpHeaders {
+  download(path: string): Observable<Blob> {
+    return this.http.get(`${API_BASE}${path}`, { headers: this.headers(), responseType: 'blob' });
+  }
+
+  private headers(): HttpHeaders {
     return new HttpHeaders(this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {});
   }
 }
