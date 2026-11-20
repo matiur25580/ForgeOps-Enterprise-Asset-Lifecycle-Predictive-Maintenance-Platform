@@ -6,18 +6,13 @@ import {WorkOrder} from '../models/work-order.model.js';
 import {DowntimeEvent} from '../models/downtime-event.model.js';
 import {Inspection} from '../models/inspection.model.js';
 import {PurchaseOrder} from '../models/purchase-order.model.js';
+import {toCsv} from '../utils/csv.js';
 export const reportsRouter=Router();
 reportsRouter.use(authenticate);
 const claims=(req:Request):AccessClaims=>req.auth!;
 const isAdmin=(c:AccessClaims)=>c.role==='owner'||c.role==='admin';
 const names=['work-orders','downtime','inspections','purchase-orders'] as const;
 type ReportName=typeof names[number];
-export function csvCell(value:unknown):string{
- let s=value instanceof Date?value.toISOString():value===null||value===undefined?'':String(value);
- if(/^[\s]*[=+@\-]/.test(s))s="'"+s;
- return '"'+s.replace(/"/g,'""')+'"';
-}
-export function toCsv(headers:string[],rows:unknown[][]):string{return [headers,...rows].map(row=>row.map(csvCell).join(',')).join('\r\n')+'\r\n';}
 function range(req:Request){
  const from=typeof req.query.from==='string'?new Date(req.query.from):new Date(Date.now()-30*86400000);
  const to=typeof req.query.to==='string'?new Date(req.query.to):new Date();
