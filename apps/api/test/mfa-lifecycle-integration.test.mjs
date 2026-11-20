@@ -140,6 +140,24 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(rotatedCodeLoginResult.status,200);
   token=rotatedCodeLoginResult.data.data.accessToken;
 
+  const wrongPasswordDisable=await call('/api/v1/mfa/disable','POST',{
+    password:'Definitely-Wrong-Password-2026!',
+    code:rotation.data.data.recoveryCodes[1]
+  });
+  assert.equal(wrongPasswordDisable.status,401);
+  assert.equal(wrongPasswordDisable.data.error.code,'PASSWORD_INVALID');
+
+  const invalidProofDisable=await call('/api/v1/mfa/disable','POST',{
+    password:account.password,
+    code:'000000'
+  });
+  assert.equal(invalidProofDisable.status,401);
+  assert.equal(invalidProofDisable.data.error.code,'MFA_CODE_INVALID_OR_ALREADY_USED');
+
+  const stillEnabled=await call('/api/v1/mfa/status');
+  assert.equal(stillEnabled.status,200);
+  assert.equal(stillEnabled.data.data.enabled,true);
+
   const disable=await call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:rotation.data.data.recoveryCodes[1]
