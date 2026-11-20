@@ -47,13 +47,26 @@ mfaRouter.post('/confirm',mfaLimiter,async(req,res,next)=>{
     const step=verifyTotp(secret,parsed.data.code);
     if(step===null){res.status(400).json({error:{code:'MFA_CODE_INVALID'}});return;}
     const recoveryCodes=createRecoveryCodes();
-    user.mfaSecretEncrypted=user.mfaPendingSecretEncrypted;
-    user.set('mfaPendingSecretEncrypted',undefined);
-    user.set('mfaPendingSecretExpiresAt',undefined);
-    user.mfaRecoveryCodeHashes=recoveryCodes.map(hashRecoveryCode);
-    user.mfaLastUsedStep=step;
-    user.mfaEnabled=true;
-    await user.save();
+    const activation=await User.updateOne(
+      {
+        _id:user._id,
+        tenantId:user.tenantId,
+        status:'active',
+        mfaEnabled:false,
+        mfaPendingSecretEncrypted:user.mfaPendingSecretEncrypted,
+        mfaPendingSecretExpiresAt:{$gt:new Date()}
+      },
+      {
+        $set:{
+          mfaSecretEncrypted:user.mfaPendingSecretEncrypted,
+          mfaRecoveryCodeHashes:recoveryCodes.map(hashRecoveryCode),
+          mfaLastUsedStep:step,
+          mfaEnabled:true
+        },
+        $unset:{mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}
+      }
+    );
+    if(activation.modifiedCount!==1){res.status(409).json({error:{code:'MFA_SETUP_NOT_STARTED'}});return;}
     await recordChange(req.auth!.tenantId,req.auth!.sub,true);
     res.status(200).json({data:{enabled:true,recoveryCodes,warning:'Recovery codes are displayed once. Store them securely; each code works once.'}});
   }catch(error){next(error);}
