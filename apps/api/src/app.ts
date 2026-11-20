@@ -10,6 +10,7 @@ import { healthRouter } from './routes/health.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { accountRouter } from './routes/account.routes.js';
 import { operationsRouter } from './routes/operations.routes.js';
+import { maintenanceRouter } from './routes/maintenance.routes.js';
 
 export const app = express();
 
@@ -54,4 +55,5 @@ app.use('/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/account', accountRouter);
 app.use('/api/v1/operations', operationsRouter);
+app.use('/api/v1/maintenance', maintenanceRouter);
 app.use(errorHandler);
