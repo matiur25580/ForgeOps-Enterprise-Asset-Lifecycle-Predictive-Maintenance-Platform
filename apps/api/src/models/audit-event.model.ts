@@ -4,7 +4,7 @@ export interface AuditEventRecord {
   tenantId: Types.ObjectId;
   actorUserId: Types.ObjectId;
   facilityId?: Types.ObjectId;
-  entityType: 'facility' | 'asset' | 'work_order' | 'maintenance_plan' | 'vendor' | 'spare_part' | 'stock_movement' | 'purchase_requisition' | 'purchase_order' | 'goods_receipt' | 'asset_alert' | 'inspection' | 'inspection_template';
+  entityType: 'facility' | 'asset' | 'work_order' | 'maintenance_plan' | 'vendor' | 'spare_part' | 'stock_movement' | 'purchase_requisition' | 'purchase_order' | 'goods_receipt' | 'asset_alert' | 'inspection' | 'inspection_template' | 'downtime_event';
   entityId: Types.ObjectId;
   action: 'created' | 'updated' | 'archived' | 'acknowledged' | 'resolved';
   changes?: Record<string, unknown>;
@@ -15,7 +15,7 @@ const auditEventSchema = new Schema<AuditEventRecord>({
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', required: true, index: true },
   actorUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   facilityId: { type: Schema.Types.ObjectId, ref: 'Facility' },
-  entityType: { type: String, enum: ['facility', 'asset', 'work_order', 'maintenance_plan', 'vendor', 'spare_part', 'stock_movement', 'purchase_requisition', 'purchase_order', 'goods_receipt', 'asset_alert', 'inspection', 'inspection_template'], required: true },
+  entityType: { type: String, enum: ['facility', 'asset', 'work_order', 'maintenance_plan', 'vendor', 'spare_part', 'stock_movement', 'purchase_requisition', 'purchase_order', 'goods_receipt', 'asset_alert', 'inspection', 'inspection_template', 'downtime_event'], required: true },
   entityId: { type: Schema.Types.ObjectId, required: true },
   action: { type: String, enum: ['created', 'updated', 'archived', 'acknowledged', 'resolved'], required: true },
   changes: { type: Schema.Types.Mixed },
