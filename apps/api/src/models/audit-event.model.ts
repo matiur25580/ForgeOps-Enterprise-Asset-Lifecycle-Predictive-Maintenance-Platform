@@ -4,7 +4,7 @@ export interface AuditEventRecord {
   tenantId: Types.ObjectId;
   actorUserId: Types.ObjectId;
   facilityId?: Types.ObjectId;
-  entityType: 'facility' | 'asset';
+  entityType: 'facility' | 'asset' | 'work_order' | 'maintenance_plan';
   entityId: Types.ObjectId;
   action: 'created' | 'updated' | 'archived';
   changes?: Record<string, unknown>;
@@ -15,7 +15,7 @@ const auditEventSchema = new Schema<AuditEventRecord>({
   tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', required: true, index: true },
   actorUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   facilityId: { type: Schema.Types.ObjectId, ref: 'Facility' },
-  entityType: { type: String, enum: ['facility', 'asset'], required: true },
+  entityType: { type: String, enum: ['facility', 'asset', 'work_order', 'maintenance_plan'], required: true },
   entityId: { type: Schema.Types.ObjectId, required: true },
   action: { type: String, enum: ['created', 'updated', 'archived'], required: true },
   changes: { type: Schema.Types.Mixed },
