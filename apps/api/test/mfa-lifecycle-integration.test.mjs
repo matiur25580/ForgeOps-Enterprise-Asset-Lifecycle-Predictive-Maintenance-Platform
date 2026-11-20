@@ -365,6 +365,34 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   const refreshAfterConcurrentReuseBody=await refreshAfterConcurrentReuse.json();
   assert.equal(refreshAfterConcurrentReuseBody.error.code,'REFRESH_TOKEN_INVALID');
 
+  const logoutRefreshToken='logout-refresh-revocation-regression-token';
+  const logoutSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(logoutRefreshToken),
+    familyId:'logout-refresh-revocation-family',
+    expiresAt:refreshExpiry()
+  });
+  const logoutResponse=await fetch(url+'/api/v1/auth/logout',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+logoutRefreshToken}
+  });
+  assert.equal(logoutResponse.status,204);
+  const revokedLogoutSession=await RefreshSession.findById(logoutSession._id);
+  assert.ok(revokedLogoutSession.revokedAt);
+  const refreshAfterLogout=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+logoutRefreshToken}
+  });
+  assert.equal(refreshAfterLogout.status,401);
+  const refreshAfterLogoutBody=await refreshAfterLogout.json();
+  assert.equal(refreshAfterLogoutBody.error.code,'REFRESH_TOKEN_INVALID');
+  const repeatedLogout=await fetch(url+'/api/v1/auth/logout',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+logoutRefreshToken}
+  });
+  assert.equal(repeatedLogout.status,204);
+
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:concurrentRotation.data.data.recoveryCodes[index]
