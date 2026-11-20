@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import type { UserRole } from '../models/user.model.js';
 
@@ -23,10 +23,12 @@ export function createFamilyId(): string {
 }
 
 export function signAccessToken(claims: AccessClaims): string {
-  return jwt.sign(claims, env.AUTH_ACCESS_TOKEN_SECRET, {
+  const options: SignOptions = {
     algorithm: 'HS256',
-    expiresIn: env.AUTH_ACCESS_TOKEN_TTL
-  });
+    // Zod validates the configured duration at the application boundary.
+    expiresIn: env.AUTH_ACCESS_TOKEN_TTL as SignOptions['expiresIn']
+  };
+  return jwt.sign(claims, env.AUTH_ACCESS_TOKEN_SECRET, options);
 }
 
 export function verifyAccessToken(token: string): AccessClaims {
