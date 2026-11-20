@@ -26,7 +26,7 @@ It connects the operational lifecycle in one place:
 
 The platform is being built as a realistic enterprise product, not a collection of disconnected CRUD screens. Workflows are tenant-scoped, important state transitions are auditable, and operational metrics document their assumptions.
 
-> **Project status:** Phase 18 — read-only audit and compliance explorer with tenant/facility-scoped access. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
+> **Project status:** Phase 19 — enterprise team administration, secure invitations and live authorization refresh. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
 
 ## At a glance
 
@@ -79,6 +79,8 @@ The platform is being built as a realistic enterprise product, not a collection 
 - Durable MongoDB job queue with atomic claims, expiring leases, bounded retries and backoff.
 - Configurable tenant SLA escalation policies, user-controlled email opt-in, per-category preferences and timezone-aware quiet hours.
 - Read-only audit explorer with actor context, filters, pagination and sensitive-field redaction.
+- Team member administration, 72-hour single-use invitations, role governance and facility assignment.
+- Immediate API authorization refresh after role changes, facility reassignment or account disablement.
 - Optional SMTP email delivery and a tenant/user-scoped delivery audit ledger.
 - Graceful worker shutdown and old job-record retention cleanup.
 
@@ -313,6 +315,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [x] Tenant/facility-scoped audit and compliance explorer.
 - [ ] Production device ingestion and validated predictive models.
 - [ ] End-to-end browser tests, load testing and independent security review.
+- [ ] Team invitation email delivery, SCIM/SSO provisioning and bulk user import.
 - [ ] Email digest scheduling, SMS/push adapters and deferred quiet-hours delivery.
 - [ ] Production observability, backup/restore drills and public demo environment.
 
@@ -336,6 +339,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [Notification centre](docs/operations/notification-centre-and-workflow-alerts.md)
 - [Notification preferences, SLA escalation and SMTP](docs/operations/notification-preferences-email-delivery.md)
 - [Audit and compliance explorer](docs/security/audit-and-compliance-explorer.md)
+- [Team administration and invitations](docs/security/team-administration-and-invitations.md)
 
 ## Project principles
 
