@@ -26,7 +26,7 @@ It connects the operational lifecycle in one place:
 
 The platform is being built as a realistic enterprise product, not a collection of disconnected CRUD screens. Workflows are tenant-scoped, important state transitions are auditable, and operational metrics document their assumptions.
 
-> **Project status:** Phase 17 — notification preferences, optional SMTP delivery and delivery audit history. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
+> **Project status:** Phase 18 — read-only audit and compliance explorer with tenant/facility-scoped access. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
 
 ## At a glance
 
@@ -78,6 +78,7 @@ The platform is being built as a realistic enterprise product, not a collection 
 - Five-minute scheduled tenant operations scans for due work, contract renewals and critical asset alerts.
 - Durable MongoDB job queue with atomic claims, expiring leases, bounded retries and backoff.
 - Configurable tenant SLA escalation policies, user-controlled email opt-in, per-category preferences and timezone-aware quiet hours.
+- Read-only audit explorer with actor context, filters, pagination and sensitive-field redaction.
 - Optional SMTP email delivery and a tenant/user-scoped delivery audit ledger.
 - Graceful worker shutdown and old job-record retention cleanup.
 
@@ -307,7 +308,9 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [x] Verified downtime, availability, asset financials and vendor intelligence.
 - [x] Scoped reporting and CSV exports.
 - [x] Durable background jobs, scheduled operational scans and retry handling.
-- [x] Notification preferences, optional SMTP delivery and delivery audit history.\n- [x] Configurable overdue work-order escalation to tenant administrators and facility managers.
+- [x] Notification preferences, optional SMTP delivery and delivery audit history.
+- [x] Configurable overdue work-order escalation to tenant administrators and facility managers.
+- [x] Tenant/facility-scoped audit and compliance explorer.
 - [ ] Production device ingestion and validated predictive models.
 - [ ] End-to-end browser tests, load testing and independent security review.
 - [ ] Email digest scheduling, SMS/push adapters and deferred quiet-hours delivery.
@@ -332,6 +335,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [Background job engine](docs/operations/background-job-engine-and-escalation.md)
 - [Notification centre](docs/operations/notification-centre-and-workflow-alerts.md)
 - [Notification preferences, SLA escalation and SMTP](docs/operations/notification-preferences-email-delivery.md)
+- [Audit and compliance explorer](docs/security/audit-and-compliance-explorer.md)
 
 ## Project principles
 
