@@ -176,7 +176,7 @@ test('logout revokes the refresh session and clears the cookie', async () => {
 
   const logout = await post('/api/v1/auth/logout', {}, cookie);
   assert.equal(logout.status, 204);
-  assert.match(logout.headers.get('set-cookie'), /Max-Age=0/i);
+  assert.match(logout.headers.get('set-cookie'), /Expires=Thu, 01 Jan 1970 00:00:00 GMT/i);
 
   const refresh = await post('/api/v1/auth/refresh', {}, cookie);
   assert.equal(refresh.status, 401);
