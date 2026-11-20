@@ -19,6 +19,7 @@ import { NotificationPreferencesComponent } from './pages/notification-preferenc
 import { AuditExplorerComponent } from './pages/audit-explorer.component';
 import { TeamAdminComponent } from './pages/team-admin.component';
 import { TeamInvitationAcceptComponent } from './pages/team-invitation-accept.component';
+import { SecuritySettingsComponent } from './pages/security-settings.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -39,6 +40,7 @@ export const routes: Routes = [
   { path: 'notification-preferences', component: NotificationPreferencesComponent, canActivate: [authGuard] },
   { path: 'audit', component: AuditExplorerComponent, canActivate: [authGuard] },
   { path: 'team', component: TeamAdminComponent, canActivate: [authGuard] },
+  { path: 'security', component: SecuritySettingsComponent, canActivate: [authGuard] },
   { path: 'team/accept', component: TeamInvitationAcceptComponent },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
