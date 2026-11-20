@@ -10,6 +10,7 @@ import { ProcurementComponent } from './pages/procurement.component';
 import { TelemetryComponent } from './pages/telemetry.component';
 import { InspectionsComponent } from './pages/inspections.component';
 import { AnalyticsComponent } from './pages/analytics.component';
+import { DowntimeComponent } from './pages/downtime.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: 'telemetry', component: TelemetryComponent, canActivate: [authGuard] },
   { path: 'inspections', component: InspectionsComponent, canActivate: [authGuard] },
   { path: 'analytics', component: AnalyticsComponent, canActivate: [authGuard] },
+  { path: 'downtime', component: DowntimeComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
