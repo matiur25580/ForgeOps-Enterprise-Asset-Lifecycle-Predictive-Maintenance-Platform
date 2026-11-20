@@ -18,6 +18,7 @@ import { Component } from '@angular/core';
         <a class="nav-item" href="/facilities"><span>⌂</span> Facilities</a>
         <a class="nav-item" href="/maintenance"><span>⚙</span> Maintenance</a>
         <a class="nav-item" href="/inventory"><span>▤</span> Inventory & MRO</a>\n        <a class="nav-item" href="/procurement"><span>▣</span> Procurement</a>
+        <a class="nav-item" href="/vendors"><span>◈</span> Vendor intelligence</a>
         <a class="nav-item" href="/telemetry"><span>⌁</span> Telemetry & health</a>
         <a class="nav-item" href="/inspections"><span>☑</span> Inspections & compliance</a>
         <a class="nav-item" href="/downtime"><span>◴</span> Downtime management</a>
