@@ -249,7 +249,7 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(stillEnabled.status,200);
   assert.equal(stillEnabled.data.data.enabled,true);
 
-  await User.updateOne({email:account.email},{$set:{status:'suspended'}});
+  await User.updateOne({email:account.email},{$set:{status:'disabled'}});
   const inactiveAccountProof=await service.consumeMfaProof(
     (await User.findOne({email:account.email}))._id.toString(),
     (await User.findOne({email:account.email})).tenantId.toString(),
