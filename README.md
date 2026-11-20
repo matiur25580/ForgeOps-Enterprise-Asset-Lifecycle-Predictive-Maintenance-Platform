@@ -1,273 +1,340 @@
-# ForgeOps — Enterprise Asset Lifecycle & Predictive Maintenance Platform
+<div align="center">
 
-> A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
+# ForgeOps
+### Enterprise Asset Lifecycle & Operations Intelligence Platform
 
-**Project status:** Phase 16 — durable background jobs and scheduled workflow scans  
-**Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
-**Language:** TypeScript across the application  
-**Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
+**One operational workspace for the assets, people, maintenance and decisions that keep critical facilities running.**
 
----
+[![CI](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform/actions/workflows/ci.yml)
+![MEAN Stack](https://img.shields.io/badge/Stack-MEAN-147D64)
+![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6)
+![License](https://img.shields.io/badge/License-Not%20specified-lightgrey)
 
-## 1. Product vision
+[Product tour](#dashboard-gallery) · [Architecture](#architecture) · [Run locally](#run-locally) · [Engineering notes](#engineering-principles)
 
-ForgeOps gives asset-intensive organizations one operational workspace for the full lifecycle of their physical assets. It connects asset records, preventive maintenance, work orders, inspections, inventory, service contracts, sensor telemetry, and operational analytics.
-
-The initial release will use realistic seeded data and simulated IoT telemetry so the product can be demonstrated without requiring factory hardware. Integrations with real devices can be added behind stable ingestion interfaces later.
-
-## 2. Who is it for?
-
-- Manufacturing and industrial operations teams
-- Power, utilities, and infrastructure operators
-- Hospitals and large facilities teams
-- Data centers, airports, and warehouses
-- Third-party maintenance and field-service providers
-
-## 3. Core product areas
-
-| Domain | Capabilities |
-|---|---|
-| Organization & tenancy | Organizations, facilities, departments, tenant isolation, subscription limits |
-| Identity & access | Authentication, MFA, roles, permissions, invitations, session management |
-| Asset registry | Asset hierarchy, categories, QR/barcode identifiers, warranty, lifecycle, documents |
-| Maintenance | Preventive plans, corrective requests, work orders, task checklists, approvals, SLA tracking |
-| Inspections & safety | Configurable checklists, scheduled inspections, findings, corrective actions, evidence |
-| Inventory & MRO | Parts catalogue, warehouses, stock movements, reservations, reorder thresholds |
-| Vendors & contracts | Vendor directory, service contracts, warranties, contract renewals, performance |
-| Telemetry & asset health | Simulated/device telemetry, threshold rules, health indicators, alert history |
-| Operations analytics | Availability, downtime, MTTR, MTBF, maintenance spend, backlog, facility comparisons |
-| Notifications & audit | In-app alerts, email integration, activity history, security and business audit events |
-| Reporting | Filterable reports, CSV exports, scheduled report foundation |
-
-## 4. Architecture
-
-The application is a modular monolith initially: one deployable API with clear domain boundaries. This keeps development and deployment manageable while preserving the option to extract high-load domains into services later.
-
-```text
-forgeops/
-├── apps/
-│   ├── web/                 # Angular application
-│   └── api/                 # Node.js + Express API
-├── packages/
-│   └── contracts/           # Shared DTOs, API contracts and enums
-├── docs/
-│   ├── architecture/
-│   ├── api/
-│   ├── database/
-│   ├── security/
-│   └── product/
-├── infrastructure/
-│   ├── docker/
-│   └── deployment/
-├── scripts/
-├── .github/workflows/
-├── docker-compose.yml
-└── README.md
-```
-
-### Request and data flow
-
-```text
-Angular Web App
-      |
-      | HTTPS / REST, WebSocket for live updates
-      v
-Express API (Node.js + TypeScript)
-      |
-      +-- Authentication & authorization
-      +-- Tenant context and policy enforcement
-      +-- Domain modules and validation
-      +-- Background jobs / notification adapters
-      |
-      v
-MongoDB (Mongoose)
-      |
-      +-- Tenant-scoped operational data
-      +-- Time-series telemetry collections
-      +-- Domain audit events
-```
-
-### Technology choices
-
-| Layer | Technology |
-|---|---|
-| Frontend | Angular, TypeScript, Angular Material, RxJS |
-| State management | NgRx where shared, workflow-level state justifies it |
-| Backend | Node.js, Express.js, TypeScript |
-| Database | MongoDB, Mongoose |
-| Real-time | Socket.IO |
-| API contract | REST, OpenAPI / Swagger |
-| Authentication | Short-lived access tokens, rotating refresh tokens (MFA planned) |
-| Validation | Shared DTO contracts and server-side schema validation |
-| Testing | Node.js test runner, MongoDB integration tests, Angular CLI build (E2E planned) |
-| Delivery | Docker, GitHub Actions, environment-based deployment |
-
-## 5. Multi-tenancy and security principles
-
-Security is a core design constraint, not a final polishing task.
-
-- Every tenant-owned record is scoped by a server-derived tenant context.
-- The API must enforce tenant boundaries on every read and write; client-side filtering is never an authorization control.
-- Role-based access control is combined with resource and facility-level permissions.
-- Passwords are stored using a modern password-hashing algorithm.
-- Refresh tokens are rotated, revocable, and stored securely.
-- MFA is planned for privileged accounts; it is not implemented yet.
-- Validate and normalize all untrusted input on the server.
-- Apply rate limits, secure headers, safe CORS policy, and request size limits.
-- Record security-sensitive and business-critical actions in audit events.
-- Never commit secrets; use environment variables and provide only a safe `.env.example`.
-- Use least-privilege database and deployment credentials.
-
-## 6. Key operational metrics
-
-- **Availability:** proportion of scheduled time an asset is operational.
-- **Downtime:** time an asset is unavailable, with reason and work-order linkage.
-- **MTTR:** average time required to restore an asset after failure.
-- **MTBF:** average operating time between recorded failures.
-- **Maintenance backlog:** approved work not yet completed.
-- **Maintenance cost:** labor and parts cost over a selected period.
-
-Metric definitions and calculation windows will be documented so dashboards are consistent and explainable.
-
-## 7. Delivery roadmap
-
-### Phase 0 — Product and engineering foundation
-- [x] Create the project repository
-- [x] Define product scope and architecture
-- [x] Establish monorepo workspace and coding standards
-- [x] Add Docker-based local development
-- [x] Add CI checks and environment templates
-
-### Phase 1 — Identity and tenant foundation
-- [x] Organization onboarding and tenant provisioning
-- [ ] User invitations and account lifecycle
-- [x] Authentication and refresh-token rotation; MFA remains planned
-- [x] Roles, permissions, and facility scopes
-- [x] Tenant-isolation integration tests
-
-### Phase 2 — Asset and facility management
-- [x] Facility registry and facility-level access scopes; departments remain planned
-- [x] Asset registry and lifecycle status
-- [ ] Asset documents, warranty, and QR identifiers
-- [x] Search, filters, and pagination; import/export remains planned
-- [x] Authenticated Angular sign-in and workspace registration screens
-- [x] Live facility directory and facility registration UI
-- [x] Live asset inventory, registration, filters, lifecycle update, and soft archive UI
-- [x] Tenant-scoped work orders with technician assignment and enforced status transitions
-- [x] Recurring preventive maintenance plans with due work-order generation
-- [x] Tenant-wide spare parts catalog and vendor directory
-- [x] Facility stock balances, receipts, issues, adjustments and movement ledger
-- [x] Inventory & MRO workspace with low-stock visibility
-- [x] Purchase requisitions with submit, owner/admin approval and rejection workflow
-- [x] Purchase orders issued from approved requisitions with tenant-scoped vendor selection
-- [x] Partial/final goods receipt notes with over-receipt protection
-- [x] Accepted goods posted to facility stock and stock movement ledger; damaged/quarantined goods excluded from on-hand stock
-- [x] Procurement workspace for requisitions, purchase orders and GRNs
-- [x] Simulated sensor readings and transparent asset health heuristic
-- [x] Telemetry-driven alert creation and active-alert refresh
-- [x] Angular maintenance workspace for work order queue and PM plan management
-
-### Phase 3 — Maintenance execution
-- [ ] Maintenance requests and work orders
-- [ ] Preventive maintenance schedules
-- [ ] Technician assignment and task checklists
-- [ ] Approval workflows and SLA tracking
-- [ ] Work history and maintenance costs
-
-### Phase 4 — Inventory, vendors, and inspections
-- [ ] Parts catalogue and warehouse stock
-- [ ] Stock movements and reservations
-- [ ] Vendors, contracts, and warranty tracking
-- [ ] Inspection templates, findings, and corrective actions
-
-### Phase 5 — Telemetry and operational intelligence
-- [x] Simulated telemetry ingestion with tenant-scoped time-series readings
-- [x] Explainable threshold-based asset health indicators
-- [x] Authenticated telemetry and health monitoring workspace
-- [x] Tenant-configurable telemetry threshold rules and alert lifecycle
-- [x] Alert acknowledgement/resolution with audit events
-- [x] Alert-to-corrective-work-order linkage with duplicate-link protection
-- [x] Reusable safety, condition and compliance checklist templates
-- [x] Facility-scoped inspection execution with required-item validation and evidence notes
-- [x] Inspection findings linked to corrective work orders with duplicate-link protection
-- [x] Recurring facility/asset inspection schedules with due work-order generation
-- [x] Independent manager review with approve/reject decisions and rejection notes
-- [x] Tenant/facility-scoped compliance summary and category reporting
-- [x] Tenant/facility-scoped operational analytics API and date filters
-- [x] Work-order backlog, throughput and status/priority breakdowns
-- [x] Transparent MTTR/MTBF proxies and parts issue cost reporting
-- [x] Live Angular operations analytics workspace
-- [x] Auditable downtime event lifecycle with independent verification
-- [x] Verified, schedule-weighted asset availability calculation
-- [x] Work-order labor and external service cost capture
-- [x] Multi-currency maintenance cost breakdowns without false FX aggregation
-- [x] Straight-line asset book depreciation with salvage value and useful-life assumptions
-- [x] Warranty expiry and 90-day exposure tracking
-- [x] Currency-grouped asset Total Cost of Ownership reporting
-- [x] Vendor scorecards using on-time delivery, quality acceptance and order fulfilment
-- [x] Supplier contract register with renewal notice windows and auto-renewal controls
-- [x] Committed procurement spend by vendor, currency and month\n- [x] Authenticated work-order, downtime, inspection and purchase-order CSV exports\n- [x] Tenant/facility-scoped report filters and spreadsheet formula-injection mitigation
-- [ ] Asset health trend charts
-- [ ] Facility operations dashboard
-- [ ] MTTR, MTBF, downtime, and cost analytics
-
-### Phase 6 — Production readiness
-- [ ] End-to-end test coverage for critical workflows
-- [ ] Load and performance testing
-- [ ] Security review and threat model
-- [ ] Observability, backup, and recovery documentation
-- [ ] Deployment guide and demo environment
-
-## Procurement consistency note
-
-Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).\n\n## Inspection and compliance\n\nReusable checklist templates, inspection evidence, failed findings and corrective-work-order linkage are documented in [inspections and compliance](docs/operations/inspections-and-compliance.md). Recurring schedules, independent review and compliance summaries are covered in [inspection scheduling, review and reporting](docs/operations/inspection-scheduling-review-and-reporting.md).\n\n## Operations analytics\n\nThe live analytics workspace and KPI methodology are documented in [operations analytics](docs/analytics/operations-analytics.md). Asset book depreciation, warranty exposure and lifecycle TCO are available in the protected [financial intelligence workspace](docs/finance/asset-financial-intelligence.md). MTTR/MTBF are explicitly labelled work-order-derived proxies. Verified availability now uses independently reviewed downtime events and configured weekly operating hours; maintenance costs are grouped by currency without conversion.
-
-## 8. Local development
-
-The local setup uses the committed npm workspace scripts and the following tools:
-
-- Node.js LTS
-- npm
-- Angular CLI
-- Docker Compose
-- MongoDB via Docker for local development
-
-Copy `.env.example` to `.env` and set a unique `AUTH_ACCESS_TOKEN_SECRET` (at least 32 characters). Start the API and Angular app with `npm run dev:api` and `npm run dev:web`. Configure the frontend API endpoint in `apps/web/src/environments/environment.ts`. Never place real credentials in source control.
-
-## 9. Engineering quality bar
-
-A feature is not considered complete merely because its screen exists. Each production-oriented workflow should include:
-
-1. A documented user story and acceptance criteria.
-2. Server-side validation and authorization.
-3. Tenant-isolation coverage where tenant data is involved.
-4. Loading, empty, error, and success UI states.
-5. Unit or integration tests for critical business rules.
-6. Audit events for sensitive state transitions.
-7. API and user documentation where appropriate.
-
-## 10. Demo strategy
-
-The demo environment will include clearly identified fictional organizations, facilities, assets, technicians, work orders, and simulated sensor readings. No real customer or industrial telemetry data is required.
-
-Demonstration scenarios will include:
-- Register an asset and assign it to a facility.
-- Schedule preventive maintenance.
-- Raise a fault and create a corrective work order.
-- Assign a technician and complete the repair workflow.
-- Trigger a simulated sensor threshold alert.
-- Reserve a spare part and record stock movement.
-- Compare downtime and maintenance KPIs across facilities.
+</div>
 
 ---
+
+## The product
+
+ForgeOps is a multi-tenant asset lifecycle and industrial operations platform for organizations that depend on reliable physical infrastructure: manufacturers, utilities, hospitals, data centres, airports, warehouses and facilities operators.
+
+It connects the operational lifecycle in one place:
+
+**Register an asset → plan maintenance → execute work → manage parts → inspect and verify → monitor equipment health → measure availability and cost → act on operational risk.**
+
+The platform is being built as a realistic enterprise product, not a collection of disconnected CRUD screens. Workflows are tenant-scoped, important state transitions are auditable, and operational metrics document their assumptions.
+
+> **Project status:** Phase 17 — notification preferences, optional SMTP delivery and delivery audit history. The repository is an actively developed portfolio project; see the capability boundaries below for what is implemented versus planned.
+
+## At a glance
+
+| | |
+|---|---|
+| **Frontend** | Angular standalone components, TypeScript, RxJS |
+| **Backend** | Node.js 22+, Express 5, TypeScript |
+| **Database** | MongoDB 8, Mongoose |
+| **Architecture** | Modular monolith + independently run background worker |
+| **Authentication** | Short-lived JWT access tokens, rotating HTTP-only refresh sessions |
+| **Validation** | Zod request validation and Mongoose schema constraints |
+| **Testing** | Node.js test runner, MongoDB Memory Server integration tests |
+| **Automation** | GitHub Actions CI, MongoDB-backed durable job queue |
+| **Email** | Optional SMTP delivery through Nodemailer |
+
+## What is implemented
+
+### Asset and facility operations
+- Organization onboarding and tenant-scoped identity.
+- Facility registry and facility-scoped access context.
+- Asset registration, search, filtering, lifecycle changes and soft archival.
+- Work-order lifecycle, technician assignment and preventive maintenance plans.
+- Downtime reporting, resolution and independent verification.
+
+### Maintenance, inventory and procurement
+- Work orders with enforced status transitions and maintenance cost capture.
+- Preventive maintenance plans and due work-order generation.
+- Spare-parts catalogue, vendors, facility stock balances and stock movement ledger.
+- Purchase requisitions, approvals, purchase orders and goods receipt notes.
+- Atomic stock guards and duplicate movement protections.
+
+### Inspections, telemetry and asset health
+- Reusable safety, condition and compliance checklist templates.
+- Facility/asset inspection execution, required-item validation and findings.
+- Recurring inspection schedules, manager review and compliance summaries.
+- Simulated sensor readings and configurable telemetry threshold alerts.
+- Explainable heuristic health indicators and corrective-work-order linkage.
+
+### Analytics and financial intelligence
+- Verified schedule-weighted asset availability.
+- Planned versus unplanned downtime.
+- Work-order-derived MTTR/MTBF proxies, clearly labelled as proxies.
+- Maintenance spend grouped by currency; no unsupported FX conversion.
+- Straight-line depreciation, warranty exposure and lifecycle TCO.
+- Vendor scorecards, procurement commitments and scoped CSV exports.
+
+### Notifications and background processing
+- Personal in-app notification inbox with read/unread controls.
+- Five-minute scheduled tenant operations scans for due work, contract renewals and critical asset alerts.
+- Durable MongoDB job queue with atomic claims, expiring leases, bounded retries and backoff.
+- User-controlled email opt-in, per-category preferences and timezone-aware quiet hours.
+- Optional SMTP email delivery and a tenant/user-scoped delivery audit ledger.
+- Graceful worker shutdown and old job-record retention cleanup.
+
+## Dashboard gallery
+
+The following twelve dashboard illustrations show the intended ForgeOps enterprise experience across its operational domains. Each view is a **UI concept preview with fictional, illustrative data**; it is not a screenshot of a live customer deployment, and figures shown are not production measurements.
+
+### 01 · Executive operations overview
+A leadership snapshot of asset availability, open work, at-risk equipment and the latest operational activity.
+
+![ForgeOps executive operations overview dashboard](docs/images/dashboards/01-executive-overview.svg)
+
+### 02 · Enterprise asset registry
+A searchable asset portfolio with lifecycle state, criticality, warranty exposure and facility context.
+
+![ForgeOps asset registry dashboard](docs/images/dashboards/02-asset-registry.svg)
+
+### 03 · Maintenance command centre
+A maintenance execution view for work-order ownership, priority, overdue workload and preventive maintenance compliance.
+
+![ForgeOps maintenance command centre dashboard](docs/images/dashboards/03-maintenance-command.svg)
+
+### 04 · Facility operations portfolio
+A multi-site comparison of facility readiness, availability, scheduled operating hours and unresolved work.
+
+![ForgeOps facility operations dashboard](docs/images/dashboards/04-facility-operations.svg)
+
+### 05 · Spare parts and MRO inventory
+A stock-control workspace for part availability, low-stock exposure and traceable inventory movements.
+
+![ForgeOps inventory and MRO dashboard](docs/images/dashboards/05-inventory-mro.svg)
+
+### 06 · Procurement and vendor intelligence
+A supplier and procurement view spanning requisitions, purchase orders, delivery performance and contract renewals.
+
+![ForgeOps procurement and vendor dashboard](docs/images/dashboards/06-procurement-vendors.svg)
+
+### 07 · Telemetry and asset health
+An equipment-health view using simulated telemetry, configurable thresholds and transparent heuristic indicators.
+
+![ForgeOps telemetry and asset health dashboard](docs/images/dashboards/07-telemetry-health.svg)
+
+### 08 · Alert response and escalation
+A prioritised alert console for acknowledgement, ownership, resolution and corrective work-order follow-through.
+
+![ForgeOps alert response dashboard](docs/images/dashboards/08-alert-response.svg)
+
+### 09 · Inspections and compliance
+A compliance workspace for recurring inspections, checklist outcomes, findings and independent manager review.
+
+![ForgeOps inspections and compliance dashboard](docs/images/dashboards/09-inspections-compliance.svg)
+
+### 10 · Verified downtime and availability
+An availability view grounded in verified downtime events and each asset's configured operating schedule.
+
+![ForgeOps downtime and availability dashboard](docs/images/dashboards/10-downtime-availability.svg)
+
+### 11 · Asset financial intelligence
+A lifecycle finance view covering straight-line book depreciation, warranty exposure and currency-aware total cost of ownership.
+
+![ForgeOps asset financial intelligence dashboard](docs/images/dashboards/11-financial-intelligence.svg)
+
+### 12 · Notifications and reporting workspace
+A user-focused operations inbox with delivery preferences, email audit status and export-ready reporting.
+
+![ForgeOps notifications and reporting dashboard](docs/images/dashboards/12-notifications-reporting.svg)
+
+## Architecture
+
+ForgeOps uses a **modular monolith** for the HTTP API, with a separately deployable background worker. This keeps domain boundaries explicit without introducing premature microservice complexity.
+
+```text
+Angular Web Application
+        |
+        | HTTPS / REST
+        v
+Express 5 API  --------------------+
+        |                          |
+        +-- Authentication / RBAC  |
+        +-- Tenant & facility scope |
+        +-- Asset / maintenance    |
+        +-- Inventory / procurement|
+        +-- Inspections / telemetry|
+        +-- Analytics / reporting  |
+        +-- Notification settings  |
+        |                          |
+        v                          v
+     MongoDB <-------------- Background Worker
+        |                    - scheduled scans
+        +-- Operational data - email delivery
+        +-- Telemetry        - retry / backoff
+        +-- Audit records    - lease recovery
+        +-- Durable jobs
+```
+
+### Repository layout
+
+```text
+apps/
+  api/
+    src/
+      auth/             # Access and refresh token services
+      config/           # Validated environment configuration
+      middleware/       # Authentication, authorization, tenant scope
+      models/           # Mongoose domain models
+      routes/            # Versioned REST endpoints
+      services/          # Domain workflows and delivery adapters
+      workers/           # Long-running background worker
+    test/                # API and MongoDB integration tests
+  web/
+    src/app/
+      core/              # API client and route guards
+      pages/             # Operations workspaces
+docs/
+  analytics/
+  architecture/
+  development/
+  finance/
+  operations/
+  reporting/
+  security/
+  images/dashboards/     # Twelve README dashboard illustrations
+.github/workflows/
+  ci.yml
+docker-compose.yml
+.env.example
+README.md
+```
+
+## Security and reliability
+
+- Tenant identity is derived from verified access-token claims, not trusted request-body values.
+- Tenant/user scope is applied on notification, delivery and operational data access.
+- Passwords use bcrypt hashing; refresh tokens are rotated, hashed at rest and revocable.
+- Role-based access and facility scoping protect privileged workflows.
+- Critical state changes have audit-event coverage.
+- API input is validated; HTTP security headers, CORS controls and rate limiting are enabled.
+- Queue jobs use atomic claims, lease expiry and bounded retries.
+- SMTP secrets are environment-only; email is disabled by default for each user.
+- Delivery history is user-scoped; notification content is escaped before HTML email rendering.
+
+## Run locally
+
+### Prerequisites
+- Node.js 22 or newer
+- npm 10 or newer
+- Docker Engine/Desktop with Docker Compose
+
+### 1. Install and configure
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Set a unique `AUTH_ACCESS_TOKEN_SECRET` of at least 32 characters in `.env`. The example secret is only a placeholder.
+
+### 2. Start MongoDB
+
+```bash
+docker compose up -d mongodb
+```
+
+The Compose service exposes MongoDB at `mongodb://localhost:27017/forgeops`.
+
+### 3. Start the API and Angular app
+
+In separate terminals from the repository root:
+
+```bash
+npm run dev:api
+npm run dev:web
+```
+
+- API: `http://localhost:4000`
+- Web app: `http://localhost:4200`
+- Sign in or create an organization at `http://localhost:4200/login`.
+
+### 4. Start the background worker
+
+In a third terminal:
+
+```bash
+npm run dev:worker
+```
+
+The API and worker must use the same MongoDB database and environment secrets.
+
+### 5. Optional SMTP email
+
+Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM` in the API and worker environments. Users must separately enable email in **Notification preferences**. Without SMTP, notifications continue in-app and email attempts are recorded as skipped.
+
+See [local development setup](docs/development/getting-started.md) and [email delivery configuration](docs/operations/notification-preferences-email-delivery.md).
+
+## Quality checks
+
+Run from the repository root:
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
+
+CI runs dependency installation, API tests (including MongoDB integration tests), TypeScript/Angular validation and workspace builds on pushes and pull requests.
+
+## Important engineering boundaries
+
+ForgeOps deliberately distinguishes implemented functionality from future integrations:
+
+- **Predictive maintenance:** current asset-health scoring is a transparent threshold heuristic over simulated telemetry. It is not a trained predictive ML model and does not claim validated failure forecasts.
+- **Telemetry:** simulated sensor data is available; production industrial protocol/device ingestion is not yet included.
+- **Availability:** calculated from independently verified downtime and configured weekly operating hours. Assets without a valid operating schedule are excluded from the measured denominator.
+- **MTTR / MTBF:** work-order-derived proxies, not a complete reliability-engineering model based on validated failure/repair event capture.
+- **Cost accounting:** costs are grouped by currency; no FX conversion or cross-currency grand total is fabricated.
+- **Procurement:** workflow and stock controls are implemented; strict cross-document crash atomicity requires MongoDB replica-set transactions.
+- **Email:** optional SMTP transport is implemented. SMS, push, provider webhooks and deferred quiet-hour delivery are not included.
+- **Dashboard gallery:** illustrative design assets; live values must be read from the connected application and its APIs.
+
+## Roadmap
+
+- [x] Multi-tenant authentication, rotating refresh sessions and RBAC.
+- [x] Asset registry, facilities, maintenance and preventive plans.
+- [x] Inventory, vendors, procurement and goods receipts.
+- [x] Telemetry simulation, alert lifecycle and corrective work-order links.
+- [x] Inspections, recurring schedules, independent review and compliance reporting.
+- [x] Verified downtime, availability, asset financials and vendor intelligence.
+- [x] Scoped reporting and CSV exports.
+- [x] Durable background jobs, scheduled operational scans and retry handling.
+- [x] Notification preferences, optional SMTP delivery and delivery audit history.
+- [ ] Production device ingestion and validated predictive models.
+- [ ] End-to-end browser tests, load testing and independent security review.
+- [ ] Email digest scheduling, SMS/push adapters and deferred quiet-hours delivery.
+- [ ] Production observability, backup/restore drills and public demo environment.
+
+## Documentation
+
+- [System architecture](docs/architecture/system-design.md)
+- [MVP scope](docs/product/mvp-scope.md)
+- [Getting started](docs/development/getting-started.md)
+- [Authentication and session security](docs/security/authentication.md)
+- [Maintenance workflows](docs/operations/maintenance-workflows.md)
+- [Inventory and procurement](docs/operations/inventory-and-procurement.md)
+- [Procurement and goods receipts](docs/operations/procurement-and-goods-receipts.md)
+- [Telemetry and asset health](docs/operations/telemetry-and-asset-health.md)
+- [Alert response](docs/operations/telemetry-alerts-and-response.md)
+- [Inspections and compliance](docs/operations/inspections-and-compliance.md)
+- [Inspection scheduling and review](docs/operations/inspection-scheduling-review-and-reporting.md)
+- [Downtime and operations analytics](docs/analytics/operations-analytics.md)
+- [Asset financial intelligence](docs/finance/asset-financial-intelligence.md)
+- [Reporting and exports](docs/reporting/report-centre-and-exports.md)
+- [Background job engine](docs/operations/background-job-engine-and-escalation.md)
+- [Notification centre](docs/operations/notification-centre-and-workflow-alerts.md)
+- [Notification preferences and SMTP](docs/operations/notification-preferences-email-delivery.md)
 
 ## Project principles
 
-**Real workflows over decorative dashboards. Secure defaults over shortcuts. Explainable metrics over invented AI claims. Modular architecture over premature microservices.**
+**Operational truth over decorative metrics. Secure defaults over shortcuts. Explainable intelligence over black-box claims. Durable workflows over fragile request handlers.**
 
-ForgeOps is being developed incrementally. Features listed in the roadmap are planned until their implementation and tests are present in the repository.
-\n\n## Reporting and exports\n\nThe authenticated report centre provides date-filtered CSV exports for work orders, downtime events, inspections and purchase orders. Exports enforce tenant and facility scope, use a 366-day maximum range and cap results at 10,000 rows. Purchase-order exports represent commitments, not paid invoices. See [report centre and export documentation](docs/reporting/report-centre-and-exports.md). PDF rendering, scheduled delivery and email distribution remain future work.\n\n\n## Notifications and workflow alerts\n\nThe authenticated notification centre provides user-scoped in-app alerts for assigned work orders approaching or breaching due dates, vendor contract renewal windows, and critical asset alerts. Managers and administrators can trigger a bounded, idempotent operations scan. Email, SMS, push delivery and scheduled background dispatch are not included yet. See [notification centre documentation](docs/operations/notification-centre-and-workflow-alerts.md).\n
-
-## Durable background jobs and scheduled escalation scans
-
-ForgeOps includes a MongoDB-backed job queue and a separate worker process. Active tenants receive an idempotently scheduled operations scan every five minutes for due/overdue work orders, vendor contract renewal windows and open critical asset alerts. Jobs use atomic claims, expiring leases, bounded retries with exponential backoff and graceful SIGTERM/SIGINT shutdown. Manual scans are queued asynchronously. Run locally with `npm run dev:worker`; production worker command: `npm run start:worker`. See [background job engine documentation](docs/operations/background-job-engine-and-escalation.md). The queue currently uses MongoDB rather than Redis/BullMQ; external email/SMS/push delivery is not implemented.
+ForgeOps is an evolving engineering portfolio project. Feature status is documented honestly, and illustrative demo content is clearly distinguished from live operational data.
