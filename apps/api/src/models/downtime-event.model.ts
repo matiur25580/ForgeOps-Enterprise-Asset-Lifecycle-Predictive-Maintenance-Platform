@@ -27,5 +27,6 @@ const schema=new Schema<DowntimeEventRecord>({
 },{timestamps:true});
 schema.index({tenantId:1,facilityId:1,assetId:1,startedAt:-1});
 schema.index({tenantId:1,assetId:1,status:1});
+schema.index({tenantId:1,assetId:1},{unique:true,partialFilterExpression:{status:'open'}});
 schema.index({tenantId:1,verificationStatus:1,startedAt:-1});
 export const DowntimeEvent=model<DowntimeEventRecord>('DowntimeEvent',schema);
