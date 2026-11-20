@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 2 — Facility & Asset Registry (API implemented; CI verified)  
+**Project status:** Phase 2 complete — authenticated Asset Registry & Facility Management UI connected to tenant-scoped APIs  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -150,6 +150,9 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Asset registry and lifecycle status
 - [ ] Asset documents, warranty, and QR identifiers
 - [x] Search, filters, and pagination; import/export remains planned
+- [x] Authenticated Angular sign-in and workspace registration screens
+- [x] Live facility directory and facility registration UI
+- [x] Live asset inventory, registration, filters, lifecycle update, and soft archive UI
 
 ### Phase 3 — Maintenance execution
 - [ ] Maintenance requests and work orders
@@ -180,7 +183,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 
 ## 8. Local development
 
-The exact commands will be added when the workspace and package scripts are committed. The intended local setup will use:
+The local setup uses the committed npm workspace scripts and the following tools:
 
 - Node.js LTS
 - npm
@@ -188,7 +191,7 @@ The exact commands will be added when the workspace and package scripts are comm
 - Docker Compose
 - MongoDB via Docker for local development
 
-Copy `.env.example` to `.env` once it is available. Never place real credentials in source control.
+Copy `.env.example` to `.env` and set a unique `AUTH_ACCESS_TOKEN_SECRET` (at least 32 characters). Start the API and Angular app with `npm run dev:api` and `npm run dev:web`. Configure the frontend API endpoint in `apps/web/src/environments/environment.ts`. Never place real credentials in source control.
 
 ## 9. Engineering quality bar
 
