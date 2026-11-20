@@ -1,32 +1,34 @@
-# Operations analytics and maintenance KPIs
+# Verified downtime, availability and maintenance cost accounting
 
-## Endpoint
+## Downtime event lifecycle
 
-Authenticated endpoint: `GET /api/v1/analytics/summary?from=YYYY-MM-DD&to=YYYY-MM-DD&facilityId=<id>`.
+Authenticated endpoints are mounted under `/api/v1/downtime`:
 
-The default reporting window is the previous 30 days through the current time. Date-only `to` values include the full UTC day. The API applies tenant scope from the verified access token and facility scope from the user's authorized facility claims. Owners/admins may optionally filter by a tenant-owned facility.
+- `GET /events` — tenant/facility-scoped event register, filterable by asset, status, verification status and start range.
+- `POST /events` — report an event against a tenant-owned asset; optional work order must reference the same asset and facility.
+- `PATCH /events/:eventId/resolve` — close an open event with an end timestamp.
+- `PATCH /events/:eventId/verify` — owner/admin/manager independently verifies or rejects a resolved event. The original reporter cannot verify their own event; rejection requires a note.
 
-## Delivered indicators
+Only resolved, independently verified events are included in availability. A second open event for the same asset is rejected. Event creation, resolution and verification produce audit events. Technicians may report downtime and resolve their own reports; reviewers must be owner/admin/manager.
 
-- Asset count: non-archived assets in the selected tenant/facility scope.
-- Work-order throughput: work orders created in the selected period, completed in the period (using completion timestamp), and current open/overdue backlog.
-- Status and priority distributions: current work-order state and current open backlog priority.
-- MTTR proxy: average elapsed wall-clock hours between corrective work-order creation and completion.
-- MTBF proxy: average interval between successive completed corrective work-order creation timestamps for the same asset.
-- Parts issue cost: issued quantity multiplied by recorded movement unit cost where available.
-- Monthly created/completed work-order trend.
+## Operating calendar and availability
 
-## Interpretation and limits
+Assets may set `scheduledOperatingHoursPerWeek` (0–168). The reporting API computes scheduled operating minutes as configured weekly hours multiplied by the reporting interval divided by 7 days. It then subtracts the union of overlapping, verified downtime intervals for those assets and reports a schedule-weighted availability percentage.
 
-These metrics are deliberately transparent and must not be presented as verified equipment reliability or accounting figures:
+The current schedule model spreads weekly operating hours evenly over the week. This is a transparent approximation, not shift-calendar arithmetic. Assets without a positive weekly schedule are reported as unmeasured and excluded from the denominator. If no assets have schedules, availability is `null`, not 0% or 100%.
 
-- MTTR is work-order elapsed time, not technician labor time.
-- MTBF assumes corrective work orders are consistently logged for each failure; unrecorded failures are invisible.
-- Repair elapsed time is only a work-order proxy for downtime. The current platform does not yet have explicit equipment downtime events and scheduled operating-hour calendars, so verified downtime and availability are not calculated.
-- Parts cost includes only stock issue movements with a unit cost. Labor, overhead, tax, receipts, and mixed-currency conversion are excluded. The API explicitly labels the unit-cost currency caveat.
-- Empty reliability samples return `null`, not a fabricated zero.
-- Large reports are currently capped at 20,000 work orders per query; dedicated aggregation and time-series rollups are future optimization work.
+Planned maintenance and inspection downtime are separated from unplanned breakdown, utility and other causes. Overlapping intervals for the same asset are merged to avoid double counting. Event times are clipped to the reporting window.
 
-## Frontend
+## Maintenance cost accounting
 
-The protected `/analytics` Angular workspace provides date filtering, operational KPI cards, backlog priority distribution, monthly work-order trend, status breakdown, and an in-product metric methodology note. It is a live API-backed workspace; no illustrative dashboard KPI values are substituted into this page.
+Work orders can record `laborCost`, `externalServiceCost` and `costCurrency`. Spare parts carry their own currency, and the stock movement ledger now snapshots that currency at movement time. Analytics groups labor, external service and issued-parts cost by currency and does not sum unlike currencies into a misleading single total.
+
+Costs are entered amounts, not payroll or invoice integrations. Tax, overhead, depreciation, purchase receipts, exchange rates and currency conversion are excluded. The work-order cost fields should be entered only when supported by an approved internal estimate, timesheet or supplier invoice.
+
+## Data and reporting boundaries
+
+- MTTR and MTBF remain work-order-derived indicators with the definitions stated in the analytics workspace.
+- Availability is calculated only from verified downtime and configured weekly operating hours.
+- Unverified, open or rejected downtime events do not affect availability.
+- Cost totals are grouped by ISO-style three-letter currency codes; no cross-currency total is produced.
+- Analytics still caps the work-order scan at 20,000 records per query. Large tenants should move to pre-aggregated reporting collections before scaling beyond this bound.
