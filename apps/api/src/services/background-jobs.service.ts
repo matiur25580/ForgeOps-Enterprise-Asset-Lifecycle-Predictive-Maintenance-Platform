@@ -7,7 +7,7 @@ export async function enqueueBackgroundJob(input:{tenantId:Types.ObjectId;type:B
 }
 export async function claimBackgroundJob(workerId:string,leaseMs=120000){
  const now=new Date();
- return BackgroundJob.findOneAndUpdate({$or:[{status:'queued',availableAt:{$lte:now}},{status:'running',lockExpiresAt:{$lte:now},attempts:{$lt:5}}]},{$set:{status:'running',lockedAt:now,lockExpiresAt:new Date(now.getTime()+leaseMs),lockedBy:workerId},$inc:{attempts:1},$unset:{lastError:1}},{sort:{availableAt:1,createdAt:1},new:true});
+ return BackgroundJob.findOneAndUpdate({$or:[{status:'queued',availableAt:{$lte:now},$expr:{$lt:['$attempts','$maxAttempts']}},{status:'running',lockExpiresAt:{$lte:now},$expr:{$lt:['$attempts','$maxAttempts']}}]},{$set:{status:'running',lockedAt:now,lockExpiresAt:new Date(now.getTime()+leaseMs),lockedBy:workerId},$inc:{attempts:1},$unset:{lastError:1}},{sort:{availableAt:1,createdAt:1},new:true});
 }
 export async function completeBackgroundJob(id:Types.ObjectId,workerId:string){
  await BackgroundJob.updateOne({_id:id,status:'running',lockedBy:workerId},{$set:{status:'completed',completedAt:new Date()},$unset:{lockedAt:1,lockExpiresAt:1,lockedBy:1,lastError:1}});
