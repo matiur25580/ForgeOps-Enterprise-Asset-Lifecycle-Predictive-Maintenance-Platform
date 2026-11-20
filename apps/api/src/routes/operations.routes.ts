@@ -3,6 +3,7 @@ import { Types, type FilterQuery } from 'mongoose';
 import { z } from 'zod';
 import type { AccessClaims } from '../auth/token.service.js';
 import type { AssetRecord } from '../models/asset.model.js';
+import type { FacilityRecord } from '../models/facility.model.js';
 import { Asset } from '../models/asset.model.js';
 import { AuditEvent } from '../models/audit-event.model.js';
 import { Facility } from '../models/facility.model.js';
@@ -62,7 +63,7 @@ function canAccessFacility(claims: AccessClaims, facilityId: string): boolean {
   return isTenantAdministrator(claims) || claims.facilityIds.includes(facilityId);
 }
 
-function scopedFacilityFilter(claims: AccessClaims): FilterQuery<{ tenantId: Types.ObjectId }> {
+function scopedFacilityFilter(claims: AccessClaims): FilterQuery<FacilityRecord> {
   return isTenantAdministrator(claims)
     ? { tenantId: new Types.ObjectId(claims.tenantId) }
     : { tenantId: new Types.ObjectId(claims.tenantId), _id: { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) } };
@@ -291,12 +292,24 @@ operationsRouter.patch('/assets/:assetId', authorize('owner', 'admin', 'manager'
       response.status(404).json({ error: { code: 'FACILITY_NOT_FOUND' } });
       return;
     }
-    const updates = {
+    if (parsed.data.parentAssetId) {
+      const parent = await Asset.findOne({
+        _id: parsed.data.parentAssetId,
+        tenantId: claims.tenantId,
+        facilityId: nextFacilityId,
+        archivedAt: null
+      }).select('_id');
+      if (!parent) {
+        response.status(400).json({ error: { code: 'INVALID_PARENT_ASSET' } });
+        return;
+      }
+    }
+    const updates: Record<string, unknown> = {
       ...parsed.data,
-      facilityId: new Types.ObjectId(nextFacilityId),
-      parentAssetId: parsed.data.parentAssetId ? new Types.ObjectId(parsed.data.parentAssetId) : parsed.data.parentAssetId,
       updatedBy: new Types.ObjectId(claims.sub)
     };
+    if (parsed.data.facilityId) updates.facilityId = new Types.ObjectId(nextFacilityId);
+    if (parsed.data.parentAssetId) updates.parentAssetId = new Types.ObjectId(parsed.data.parentAssetId);
     const asset = await Asset.findOneAndUpdate(
       { _id: existing._id, tenantId: claims.tenantId, archivedAt: null },
       { $set: updates },
