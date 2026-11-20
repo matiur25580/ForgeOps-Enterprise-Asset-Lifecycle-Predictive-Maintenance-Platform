@@ -26,7 +26,14 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
-app.use(pinoHttp({ level: env.LOG_LEVEL }));
+
+// pino-http's published typings expose a module namespace under NodeNext,
+// while its ESM default export is the middleware factory at runtime.
+const createHttpLogger = pinoHttp as unknown as (
+  options: { level: string }
+) => express.RequestHandler;
+app.use(createHttpLogger({ level: env.LOG_LEVEL }));
+
 app.use(rateLimit({
   windowMs: 60_000,
   limit: 120,
