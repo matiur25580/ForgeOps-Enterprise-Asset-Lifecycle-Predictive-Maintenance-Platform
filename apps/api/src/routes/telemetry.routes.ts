@@ -6,6 +6,7 @@ import {authenticate} from '../middleware/authenticate.js';
 import {authorize} from '../middleware/authorize.js';
 import {Asset} from '../models/asset.model.js';
 import {TelemetryReading, type TelemetryMetric} from '../models/telemetry-reading.model.js';
+import {evaluateTelemetryAlerts} from '../services/telemetry-alerts.service.js';
 
 export const telemetryRouter=Router();
 telemetryRouter.use(authenticate);
@@ -45,6 +46,6 @@ telemetryRouter.post('/simulate',authorize('owner','admin','manager'),async(req,
  const base:Record<TelemetryMetric,number>={temperature_c:asset.criticality==='critical'?82:65,vibration_mm_s:asset.criticality==='high'?5.2:2.1,pressure_bar:3.4,current_amp:asset.criticality==='critical'?86:48};
  const metrics=Object.keys(thresholds) as TelemetryMetric[];const now=Date.now();const readings=[] as any[];
  for(let i=0;i<p.data.samples;i++){for(const metric of metrics){const drift=asset.lifecycleStatus==='maintenance'?0.55:1;const noise=(Math.random()-.5)*(metric==='pressure_bar'?.7:metric==='current_amp'?12:metric==='temperature_c'?10:1.4);let value=base[metric]*drift+noise;if(metric==='pressure_bar')value=Math.max(.1,value);else value=Math.max(0,value);readings.push({tenantId:new Types.ObjectId(c.tenantId),facilityId:asset.facilityId,assetId:asset._id,metric,value:Number(value.toFixed(2)),unit:thresholds[metric].unit,quality:'good',source:'simulator',recordedAt:new Date(now-(p.data.samples-i)*60_000)});}}
- await TelemetryReading.insertMany(readings);res.status(201).json({data:{assetId:asset._id,samples:p.data.samples,readingsCreated:readings.length,metrics,source:'simulator'}});
+ await TelemetryReading.insertMany(readings);const alertEvaluation=await evaluateTelemetryAlerts(readings);res.status(201).json({data:{assetId:asset._id,samples:p.data.samples,readingsCreated:readings.length,metrics,source:'simulator',alerts:alertEvaluation}});
  }catch(e){next(e);}
 });
