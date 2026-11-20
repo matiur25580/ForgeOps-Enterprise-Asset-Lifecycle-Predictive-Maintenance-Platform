@@ -21,7 +21,14 @@ test('downtime lifecycle prevents duplicate open events and requires independent
  managerToken=signAccessToken({sub:manager._id.toString(),tenantId,role:'manager',facilityIds:[facilityId]});
  const verified=await request('/api/v1/downtime/events/'+eventId+'/verify',{method:'PATCH',auth:managerToken,body:{decision:'verified',notes:'Maintenance log and operator report checked.'}});
  assert.equal(verified.response.status,200);assert.equal(verified.payload.data.event.verificationStatus,'verified');
+ const wo=await request('/api/v1/maintenance/work-orders',{method:'POST',body:{facilityId,assetId,title:'Replace failed pump bearing',type:'corrective',priority:'high',laborCost:1250,externalServiceCost:450,costCurrency:'INR'}});
+ assert.equal(wo.response.status,201);
+ const woId=wo.payload.data.workOrder._id;
+ assert.equal((await request('/api/v1/maintenance/work-orders/'+woId,{method:'PATCH',body:{status:'assigned'}})).response.status,200);
+ assert.equal((await request('/api/v1/maintenance/work-orders/'+woId,{method:'PATCH',body:{status:'in_progress'}})).response.status,200);
+ assert.equal((await request('/api/v1/maintenance/work-orders/'+woId,{method:'PATCH',body:{status:'completed'}})).response.status,200);
  const summary=await request('/api/v1/analytics/summary');assert.equal(summary.response.status,200);assert.equal(summary.payload.data.availability.measuredAssets,1);assert.ok(summary.payload.data.availability.verifiedDowntimeMinutes>0);assert.ok(summary.payload.data.availability.availabilityPercent<100);
+ const inr=summary.payload.data.costs.byCurrency.find(x=>x.currency==='INR');assert.equal(inr.laborCost,1250);assert.equal(inr.externalServiceCost,450);
  const events=await request('/api/v1/downtime/events?verificationStatus=verified');assert.equal(events.response.status,200);assert.equal(events.payload.data.events.length,1);
 });
 test('downtime events are tenant isolated and invalid ranges are rejected',async()=>{
