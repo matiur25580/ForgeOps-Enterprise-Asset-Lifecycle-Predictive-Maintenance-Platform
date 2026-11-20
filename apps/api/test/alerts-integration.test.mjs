@@ -6,7 +6,7 @@ process.env.AUTH_ACCESS_TOKEN_SECRET='forgeops-alert-test-secret-never-use-in-pr
 process.env.AUTH_ACCESS_TOKEN_TTL='15m';
 process.env.AUTH_REFRESH_TOKEN_DAYS='14';
 
-let mongod,mongoose,Tenant,server,baseUrl,token,facilityId,assetId;
+let mongod,mongoose,Tenant,AuditEvent,server,baseUrl,token,facilityId,assetId;
 async function request(path,{method='GET',body,auth=token}={}){
  const response=await fetch(baseUrl+path,{method,headers:{...(auth?{authorization:'Bearer '+auth}:{}),...(body?{'content-type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
  return {response,payload:response.status===204?null:await response.json()};
@@ -14,8 +14,8 @@ async function request(path,{method='GET',body,auth=token}={}){
 before(async()=>{
  const {MongoMemoryServer}=await import('mongodb-memory-server');
  mongod=await MongoMemoryServer.create();process.env.MONGODB_URI=mongod.getUri('forgeops-alerts');
- const [mm,app,tenant]=await Promise.all([import('mongoose'),import('../src/app.ts'),import('../src/models/tenant.model.ts')]);
- mongoose=mm.default;Tenant=tenant.Tenant;await mongoose.connect(process.env.MONGODB_URI);
+ const [mm,app,tenant,audit]=await Promise.all([import('mongoose'),import('../src/app.ts'),import('../src/models/tenant.model.ts'),import('../src/models/audit-event.model.ts')]);
+ mongoose=mm.default;Tenant=tenant.Tenant;AuditEvent=audit.AuditEvent;await mongoose.connect(process.env.MONGODB_URI);
  server=app.app.listen(0,'127.0.0.1');await new Promise((resolve,reject)=>{server.once('listening',resolve);server.once('error',reject);});
  baseUrl='http://127.0.0.1:'+server.address().port;
 });
@@ -49,8 +49,8 @@ test('configured telemetry thresholds create alerts that can be acknowledged, li
  assert.equal(duplicate.response.status,200);assert.equal(duplicate.payload.data.alreadyLinked,true);
  const resolved=await request('/api/v1/alerts/'+alert._id+'/resolve',{method:'PATCH',body:{}});
  assert.equal(resolved.response.status,200);assert.equal(resolved.payload.data.alert.status,'resolved');
- const audits=await mongoose.connection.collection('auditevents').find({entityType:'asset_alert',entityId:alert._id}).toArray();
- assert.equal(audits.length,2);
+ const audits=await AuditEvent.countDocuments({entityType:'asset_alert',entityId:alert._id});
+ assert.equal(audits,2);
 });
 
 test('alert rules reject invalid severity ordering and alert access is tenant scoped',async()=>{
