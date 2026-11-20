@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { AccessClaims } from '../auth/token.service.js';
 import type { WorkOrderRecord, WorkOrderStatus } from '../models/work-order.model.js';
 import type { MaintenancePlanRecord } from '../models/maintenance-plan.model.js';
+import type { UserRecord } from '../models/user.model.js';
 import { WorkOrder } from '../models/work-order.model.js';
 import { MaintenancePlan } from '../models/maintenance-plan.model.js';
 import { Asset } from '../models/asset.model.js';
@@ -106,7 +107,7 @@ maintenanceRouter.get('/technicians', authorize('owner', 'admin', 'manager'), as
     if (facilityId && (!objectId(facilityId) || !inScope(claims, facilityId))) {
       response.status(404).json({ error: { code: 'FACILITY_NOT_FOUND' } }); return;
     }
-    const filter: Record<string, unknown> = {
+    const filter: FilterQuery<UserRecord> = {
       tenantId: new Types.ObjectId(claims.tenantId), role: 'technician', status: 'active'
     };
     if (facilityId) filter.facilityIds = new Types.ObjectId(facilityId);
