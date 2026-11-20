@@ -64,7 +64,7 @@ alertsRouter.get('/', async(req,res,next) => {
 });
 alertsRouter.patch('/:alertId/acknowledge', authorize('owner','admin','manager','technician'), async(req,res,next) => {
   try {
-    const c=claims(req);const id=req.params.alertId;
+    const c=claims(req);const id=String(req.params.alertId ?? '');
     if(!Types.ObjectId.isValid(id)){res.status(400).json({error:{code:'INVALID_ALERT_ID'}});return;}
     const alert=await AssetAlert.findOne({_id:id,tenantId:c.tenantId});
     if(!alert||!inScope(c,alert.facilityId.toString())){res.status(404).json({error:{code:'ALERT_NOT_FOUND'}});return;}
@@ -75,7 +75,7 @@ alertsRouter.patch('/:alertId/acknowledge', authorize('owner','admin','manager',
 });
 alertsRouter.patch('/:alertId/resolve', authorize('owner','admin','manager'), async(req,res,next) => {
   try {
-    const c=claims(req);const id=req.params.alertId;
+    const c=claims(req);const id=String(req.params.alertId ?? '');
     if(!Types.ObjectId.isValid(id)){res.status(400).json({error:{code:'INVALID_ALERT_ID'}});return;}
     const alert=await AssetAlert.findOne({_id:id,tenantId:c.tenantId});
     if(!alert||!inScope(c,alert.facilityId.toString())){res.status(404).json({error:{code:'ALERT_NOT_FOUND'}});return;}
@@ -85,7 +85,7 @@ alertsRouter.patch('/:alertId/resolve', authorize('owner','admin','manager'), as
 });
 alertsRouter.post('/:alertId/work-order', authorize('owner','admin','manager'), async(req,res,next) => {
   try {
-    const c=claims(req);const id=req.params.alertId;
+    const c=claims(req);const id=String(req.params.alertId ?? '');
     if(!Types.ObjectId.isValid(id)){res.status(400).json({error:{code:'INVALID_ALERT_ID'}});return;}
     const alert=await AssetAlert.findOne({_id:id,tenantId:c.tenantId});
     if(!alert||!inScope(c,alert.facilityId.toString())){res.status(404).json({error:{code:'ALERT_NOT_FOUND'}});return;}
