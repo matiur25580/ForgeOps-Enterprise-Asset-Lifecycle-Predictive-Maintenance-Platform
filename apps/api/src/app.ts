@@ -16,6 +16,7 @@ import { procurementRouter } from './routes/procurement.routes.js';
 import { telemetryRouter } from './routes/telemetry.routes.js';
 import { alertsRouter } from './routes/alerts.routes.js';
 import { inspectionsRouter } from './routes/inspections.routes.js';
+import { analyticsRouter } from './routes/analytics.routes.js';
 
 export const app = express();
 
@@ -66,4 +67,5 @@ app.use('/api/v1/procurement', procurementRouter);
 app.use('/api/v1/telemetry', telemetryRouter);
 app.use('/api/v1/alerts', alertsRouter);
 app.use('/api/v1/inspections', inspectionsRouter);
+app.use('/api/v1/analytics', analyticsRouter);
 app.use(errorHandler);
