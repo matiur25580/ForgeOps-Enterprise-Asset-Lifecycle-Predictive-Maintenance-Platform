@@ -319,6 +319,12 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.match(rotatedCookie,/Max-Age=\d+/i);
   assert.ok(rotatedRefreshToken);
   assert.notEqual(rotatedRefreshToken,reusedRefreshToken);
+  const rotatedSession=await RefreshSession.findById(reuseSession._id).select('+tokenHash +usedTokenHashes');
+  assert.ok(rotatedSession);
+  assert.equal(rotatedSession.tokenHash,hashToken(rotatedRefreshToken));
+  assert.ok(rotatedSession.usedTokenHashes.includes(hashToken(reusedRefreshToken)));
+  assert.ok(!rotatedSession.usedTokenHashes.includes(hashToken(rotatedRefreshToken)));
+  assert.notEqual(rotatedSession.tokenHash,hashToken(reusedRefreshToken));
 
   const replayedRefresh=await fetch(url+'/api/v1/auth/refresh',{
     method:'POST',
@@ -327,6 +333,9 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   const replayedRefreshBody=await replayedRefresh.json();
   assert.equal(replayedRefresh.status,401);
   assert.equal(replayedRefreshBody.error.code,'REFRESH_TOKEN_INVALID');
+  const clearedReplayCookie=replayedRefresh.headers.get('set-cookie')??'';
+  assert.match(clearedReplayCookie,/forgeops_refresh=;/);
+  assert.match(clearedReplayCookie,/Max-Age=0/i);
   const revokedReuseSession=await RefreshSession.findById(reuseSession._id);
   assert.ok(revokedReuseSession.revokedAt);
 
