@@ -195,6 +195,9 @@ operationsRouter.post('/assets', authorize('owner', 'admin', 'manager'), async (
       response.status(400).json({ error: { code: 'VALIDATION_ERROR', details: parsed.error.flatten() } });
       return;
     }
+    if (parsed.data.salvageValue !== undefined && parsed.data.purchaseCost !== undefined && parsed.data.salvageValue > parsed.data.purchaseCost) {
+      response.status(400).json({ error: { code: 'SALVAGE_EXCEEDS_PURCHASE_COST' } }); return;
+    }
     const claims = claimsFor(request);
     if (!canAccessFacility(claims, parsed.data.facilityId)) {
       response.status(403).json({ error: { code: 'FACILITY_SCOPE_FORBIDDEN' } });
@@ -319,6 +322,11 @@ operationsRouter.patch('/assets/:assetId', authorize('owner', 'admin', 'manager'
     if (!canAccessFacility(claims, existing.facilityId.toString())) {
       response.status(404).json({ error: { code: 'ASSET_NOT_FOUND' } });
       return;
+    }
+    const nextPurchaseCost = parsed.data.purchaseCost ?? existing.purchaseCost ?? 0;
+    const nextSalvageValue = parsed.data.salvageValue ?? existing.salvageValue ?? 0;
+    if (nextSalvageValue > nextPurchaseCost) {
+      response.status(400).json({ error: { code: 'SALVAGE_EXCEEDS_PURCHASE_COST' } }); return;
     }
     const nextFacilityId = parsed.data.facilityId ?? existing.facilityId.toString();
     if (!canAccessFacility(claims, nextFacilityId)) {
