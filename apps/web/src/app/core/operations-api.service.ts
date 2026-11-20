@@ -48,6 +48,10 @@ export class OperationsApiService {
     return this.http.post<T>(`${API_BASE}${path}`, body, { headers: this.headers() });
   }
 
+  put<T>(path: string, body: unknown): Observable<T> {
+    return this.http.put<T>(`${API_BASE}${path}`, body, { headers: this.headers() });
+  }
+
   patch<T>(path: string, body: unknown): Observable<T> {
     return this.http.patch<T>(`${API_BASE}${path}`, body, { headers: this.headers() });
   }
