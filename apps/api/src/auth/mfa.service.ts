@@ -68,12 +68,12 @@ export async function consumeMfaProof(userId:string,tenantId:string,code:string)
   if(!user)return false;
   const recoveryHash=recoveryCodeMatches(user.mfaRecoveryCodeHashes,code);
   if(recoveryHash){
-    const result=await User.updateOne({_id:user._id,tenantId,mfaEnabled:true,mfaRecoveryCodeHashes:recoveryHash},{$pull:{mfaRecoveryCodeHashes:recoveryHash}});
+    const result=await User.updateOne({_id:user._id,tenantId,status:'active',mfaEnabled:true,mfaRecoveryCodeHashes:recoveryHash},{$pull:{mfaRecoveryCodeHashes:recoveryHash}});
     return result.modifiedCount===1;
   }
   if(!user.mfaSecretEncrypted)return false;
   const step=verifyTotp(decryptSecret(user.mfaSecretEncrypted),code,Date.now(),user.mfaLastUsedStep??-1);
   if(step===null)return false;
-  const result=await User.updateOne({_id:user._id,tenantId,mfaEnabled:true,mfaLastUsedStep:{$lt:step}},{$set:{mfaLastUsedStep:step}});
+  const result=await User.updateOne({_id:user._id,tenantId,status:'active',mfaEnabled:true,mfaLastUsedStep:{$lt:step}},{$set:{mfaLastUsedStep:step}});
   return result.modifiedCount===1;
 }
