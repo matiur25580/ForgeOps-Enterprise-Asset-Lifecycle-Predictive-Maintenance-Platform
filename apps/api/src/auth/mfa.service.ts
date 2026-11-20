@@ -50,7 +50,7 @@ export function verifyTotp(secret:string,code:string,now=Date.now(),lastUsedStep
   return null;
 }
 export function createRecoveryCodes():string[]{
-  return Array.from({length:10},()=>{const raw=randomBytes(6).toString('hex').toUpperCase();return raw.match(/.{1,4}/g)!.join('-');});
+  return Array.from({length:10},()=>{const raw=randomBytes(12).toString('hex').toUpperCase();return raw.match(/.{1,8}/g)!.join('-');});
 }
 export function hashRecoveryCode(code:string):string{return createHash('sha256').update(code.replace(/-/g,'').toUpperCase()).digest('hex');}
 export function recoveryCodeMatches(stored:string[],code:string):string|null{
