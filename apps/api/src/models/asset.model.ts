@@ -20,6 +20,13 @@ export interface AssetRecord {
   commissionedAt?: Date;
   warrantyExpiresAt?: Date;
   purchaseCost?: number;
+  salvageValue?: number;
+  usefulLifeMonths?: number;
+  depreciationMethod: 'straight_line';
+  depreciationStartDate?: Date;
+  warrantyProvider?: string;
+  warrantyReference?: string;
+  warrantyNotes?: string;
   currency: string;
   scheduledOperatingHoursPerWeek?: number;
   parentAssetId?: Types.ObjectId;
@@ -49,6 +56,13 @@ const assetSchema = new Schema<AssetRecord>({
   commissionedAt: { type: Date },
   warrantyExpiresAt: { type: Date },
   purchaseCost: { type: Number, min: 0 },
+  salvageValue: { type: Number, min: 0 },
+  usefulLifeMonths: { type: Number, min: 1, max: 1200 },
+  depreciationMethod: { type: String, enum: ['straight_line'], default: 'straight_line', required: true },
+  depreciationStartDate: { type: Date },
+  warrantyProvider: { type: String, trim: true, maxlength: 160 },
+  warrantyReference: { type: String, trim: true, maxlength: 120 },
+  warrantyNotes: { type: String, trim: true, maxlength: 1000 },
   currency: { type: String, default: 'USD', uppercase: true, minlength: 3, maxlength: 3, required: true },
   scheduledOperatingHoursPerWeek: { type: Number, min: 0, max: 168 },
   parentAssetId: { type: Schema.Types.ObjectId, ref: 'Asset' },
