@@ -26,7 +26,7 @@ test('recovery codes are random, normalized and stored as one-way hashes',()=>{
   const codes=mfa.createRecoveryCodes();
   assert.equal(codes.length,10);
   assert.equal(new Set(codes).size,10);
-  assert.ok(codes.every(code=>/^[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/.test(code)));
+  assert.ok(codes.every(code=>/^[A-F0-9]{8}-[A-F0-9]{8}-[A-F0-9]{8}$/.test(code)));
   const hashes=codes.map(mfa.hashRecoveryCode);
   assert.equal(mfa.recoveryCodeMatches(hashes,codes[0]),hashes[0]);
   assert.equal(mfa.recoveryCodeMatches(hashes,codes[0].toLowerCase()),hashes[0]);
