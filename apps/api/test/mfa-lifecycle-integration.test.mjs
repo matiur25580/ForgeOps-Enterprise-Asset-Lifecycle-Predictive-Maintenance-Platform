@@ -418,6 +418,29 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   const revokedMismatchedTenantSession=await RefreshSession.findById(mismatchedTenantSession._id);
   assert.ok(revokedMismatchedTenantSession.revokedAt);
 
+  // A suspended tenant must invalidate an otherwise valid refresh session.
+  const tenantSuspensionToken='refresh-session-suspended-tenant-regression-token';
+  const suspendedTenantSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(tenantSuspensionToken),
+    familyId:'refresh-session-suspended-tenant-family',
+    expiresAt:refreshExpiry()
+  });
+  await Tenant.updateOne({_id:inactiveUser.tenantId},{$set:{status:'suspended'}});
+  const suspendedTenantRefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+tenantSuspensionToken}
+  });
+  const suspendedTenantBody=await suspendedTenantRefresh.json();
+  assert.equal(suspendedTenantRefresh.status,401);
+  assert.equal(suspendedTenantBody.error.code,'ACCOUNT_UNAVAILABLE');
+  assert.equal(suspendedTenantBody.data,undefined);
+  assert.match(suspendedTenantRefresh.headers.get('set-cookie')??'',/Max-Age=0/i);
+  const revokedSuspendedTenantSession=await RefreshSession.findById(suspendedTenantSession._id);
+  assert.ok(revokedSuspendedTenantSession.revokedAt);
+  await Tenant.updateOne({_id:inactiveUser.tenantId},{$set:{status:'active'}});
+
   const concurrentRefreshToken='concurrent-refresh-race-regression-token';
   const concurrentRefreshSession=await RefreshSession.create({
     userId:inactiveUser._id,
