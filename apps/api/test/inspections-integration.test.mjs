@@ -28,3 +28,22 @@ test('required checklist items and finding notes are enforced; tenant data is is
  assert.equal(other.response.status,201);
  const hidden=await request('/api/v1/inspections/templates',{auth:other.payload.data.accessToken});assert.equal(hidden.response.status,200);assert.equal(hidden.payload.data.templates.length,0);
 });
+
+test('recurring schedules generate due work orders, advance safely and expose compliance reports',async()=>{
+ const template=await request('/api/v1/inspections/templates',{method:'POST',body:{code:'MONTHLY-SAFE-01',title:'Monthly plant safety review',category:'safety',items:[{key:'walkway',label:'Walkways are clear',required:true}]}});
+ assert.equal(template.response.status,201);
+ const schedule=await request('/api/v1/inspections/schedules',{method:'POST',body:{facilityId,assetId,templateId:template.payload.data.template._id,title:'Monthly pump safety',intervalDays:30,nextDueAt:new Date(Date.now()-86400000).toISOString(),priority:'high'}});
+ assert.equal(schedule.response.status,201);
+ const generated=await request('/api/v1/inspections/schedules/'+schedule.payload.data.schedule._id+'/generate-work-order',{method:'POST',body:{}});
+ assert.equal(generated.response.status,201);assert.equal(generated.payload.data.workOrder.type,'inspection');assert.equal(generated.payload.data.workOrder.sourceInspectionScheduleId,schedule.payload.data.schedule._id);
+ const early=await request('/api/v1/inspections/schedules/'+schedule.payload.data.schedule._id+'/generate-work-order',{method:'POST',body:{}});
+ assert.equal(early.response.status,409);assert.equal(early.payload.error.code,'INSPECTION_NOT_DUE_YET');
+ const pause=await request('/api/v1/inspections/schedules/'+schedule.payload.data.schedule._id+'/status',{method:'PATCH',body:{status:'paused'}});
+ assert.equal(pause.response.status,200);assert.equal(pause.payload.data.schedule.status,'paused');
+ const run=await request('/api/v1/inspections',{method:'POST',body:{facilityId,assetId,templateId:template.payload.data.template._id,responses:[{itemKey:'walkway',result:'pass'}]}});
+ assert.equal(run.response.status,201);assert.equal(run.payload.data.inspection.reviewStatus,'pending');
+ const selfReview=await request('/api/v1/inspections/'+run.payload.data.inspection._id+'/review',{method:'PATCH',body:{decision:'approved'}});
+ assert.equal(selfReview.response.status,403);assert.equal(selfReview.payload.error.code,'SELF_REVIEW_NOT_ALLOWED');
+ const report=await request('/api/v1/inspections/reports/summary');
+ assert.equal(report.response.status,200);assert.equal(report.payload.data.totals.inspections,1);assert.equal(report.payload.data.passRate,100);
+});
