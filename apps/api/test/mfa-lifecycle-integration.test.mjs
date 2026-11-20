@@ -297,6 +297,35 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   await User.updateOne({email:account.email},{$set:{status:'active'}});
 
+  // A valid MFA challenge issued before tenant suspension must not create a session.
+  const tenantSuspensionLogin=await call('/api/v1/auth/login','POST',{
+    organizationSlug:account.organizationSlug,
+    email:account.email,
+    password:account.password
+  },null);
+  assert.equal(tenantSuspensionLogin.status,200);
+  assert.equal(tenantSuspensionLogin.data.data.mfaRequired,true);
+  const {Tenant:TenantModel}=await import('../src/models/tenant.model.ts');
+  const tenantBeforeSuspension=await TenantModel.findById(inactiveUser.tenantId);
+  assert.equal(tenantBeforeSuspension.status,'active');
+  const sessionsBeforeSuspensionChallenge=await RefreshSession.countDocuments({userId:inactiveUser._id});
+  await TenantModel.updateOne({_id:inactiveUser.tenantId},{$set:{status:'suspended'}});
+  const suspendedTenantMfaResponse=await fetch(url+'/api/v1/auth/login/mfa',{
+    method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({
+      challengeToken:tenantSuspensionLogin.data.data.challengeToken,
+      code:concurrentRotation.data.data.recoveryCodes[6]
+    })
+  });
+  const suspendedTenantMfaBody=await suspendedTenantMfaResponse.json();
+  assert.equal(suspendedTenantMfaResponse.status,401);
+  assert.equal(suspendedTenantMfaBody.error.code,'ACCOUNT_UNAVAILABLE');
+  assert.equal(suspendedTenantMfaBody.data,undefined);
+  assert.equal(suspendedTenantMfaResponse.headers.get('set-cookie'),null);
+  assert.equal(await RefreshSession.countDocuments({userId:inactiveUser._id}),sessionsBeforeSuspensionChallenge);
+  await TenantModel.updateOne({_id:inactiveUser.tenantId},{$set:{status:'active'}});
+
   const reusedRefreshToken='refresh-token-reuse-regression-test-token';
   const reuseSession=await RefreshSession.create({
     userId:inactiveUser._id,
