@@ -16,6 +16,7 @@
     "dev:web": "npm run start --workspace @forgeops/web",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "start:api": "npm run start --workspace @forgeops/api"
   }
 }
