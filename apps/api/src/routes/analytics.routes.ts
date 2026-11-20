@@ -70,12 +70,12 @@ analyticsRouter.get('/summary',async(req,res,next)=>{
    workOrders:{created:periodOrders.length,completed:completed.length,open:open.length,overdue:overdue.length,byStatus,byPriority},
    maintenance:{mttrHours:durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length*100)/100:null,mtbfHours:intervals.length?Math.round(intervals.reduce((a,b)=>a+b,0)/intervals.length*100)/100:null,correctiveWorkOrders:durations.length,repairElapsedHours:Math.round(durations.reduce((a,b)=>a+b,0)*100)/100},
    availability:{availabilityPercent:availabilityPercent===null?null:Math.round(availabilityPercent*100)/100,measuredAssets:operatingAssets.length,unmeasuredAssets:Math.max(0,assetCount-operatingAssets.length),scheduledOperatingMinutes:Math.round(scheduledMinutes),verifiedDowntimeMinutes:Math.round(verifiedDowntimeMinutes),plannedDowntimeMinutes:Math.round(plannedDowntimeMinutes),unplannedDowntimeMinutes:Math.round(unplannedDowntimeMinutes)},
-   costs:{byCurrency:maintenanceCosts,issuedLines:issuedCosts.reduce((sum:number,x:{issuedLines:number})=>sum+x.issuedLines,0)},
+   costs:{partsIssueCost:maintenanceCosts.length<=1?(maintenanceCosts[0]?.partsIssueCost||0):null,currency:maintenanceCosts.length===1?maintenanceCosts[0].currency:null,byCurrency:maintenanceCosts,issuedLines:issuedCosts.reduce((sum:number,x:{issuedLines:number})=>sum+x.issuedLines,0)},
    trends:monthly,
    methodology:{
     mttr:'Mean elapsed hours from corrective work-order creation to completion; not technician labor time.',
     mtbf:'Mean interval between completed corrective work-order creation timestamps for the same asset; requires consistent failure logging.',
-    downtime:'Availability uses resolved and independently verified downtime events. Assets need scheduledOperatingHoursPerWeek configured. Weekly hours are spread evenly across the reporting interval; use a detailed shift calendar for precise shift-based availability. Unconfigured assets are excluded.',
+    downtime:'Availability uses resolved and independently verified downtime events; open or unverified events are not verified and are excluded. Assets need scheduledOperatingHoursPerWeek configured. Weekly hours are spread evenly across the reporting interval; use a detailed shift calendar for precise shift-based availability. Unconfigured assets are excluded.',
     cost:'Labor and external service amounts are entered on work orders; parts issue cost uses stock ledger unit cost and spare-part currency. Totals are grouped by currency; no currency conversion, tax, or overhead is applied.'
    }
   }});
