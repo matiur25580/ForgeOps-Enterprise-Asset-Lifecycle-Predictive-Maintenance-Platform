@@ -25,7 +25,7 @@ const schema=new Schema<PurchaseOrderRecord>({
  subtotal:{type:Number,min:0,required:true},expectedAt:{type:Date},issuedAt:{type:Date,default:Date.now,required:true},
  createdBy:{type:Schema.Types.ObjectId,ref:'User',required:true},updatedBy:{type:Schema.Types.ObjectId,ref:'User',required:true},
  notes:{type:String,trim:true,maxlength:2000}
-},{timestamps:true});
+},{timestamps:true,optimisticConcurrency:true});
 schema.index({tenantId:1,purchaseOrderNumber:1},{unique:true});
 schema.index({tenantId:1,facilityId:1,status:1,createdAt:-1});
 schema.index({tenantId:1,requisitionId:1},{unique:true});
