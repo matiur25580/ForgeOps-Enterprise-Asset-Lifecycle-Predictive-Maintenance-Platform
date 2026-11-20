@@ -11,7 +11,7 @@ auditEventsRouter.use(authenticate);
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).max(10000).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(25),
-  entityType: z.enum(['facility','asset','work_order','maintenance_plan','vendor','spare_part','stock_movement','purchase_requisition','purchase_order','goods_receipt','asset_alert','inspection','inspection_template','downtime_event','vendor_contract']).optional(),
+  entityType: z.enum(['facility','asset','work_order','maintenance_plan','vendor','spare_part','stock_movement','purchase_requisition','purchase_order','goods_receipt','asset_alert','inspection','inspection_template','downtime_event','vendor_contract','team_member','team_invitation']).optional(),
   action: z.enum(['created','updated','archived','acknowledged','resolved']).optional(),
   actorUserId: z.string().optional(),
   facilityId: z.string().optional(),
