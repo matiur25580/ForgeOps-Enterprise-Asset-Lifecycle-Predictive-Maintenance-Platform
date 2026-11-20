@@ -6,7 +6,10 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(4000),
   API_CORS_ORIGINS: z.string().default('http://localhost:4200'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
-  MONGODB_URI: z.string().min(1).default('mongodb://localhost:27017/forgeops'),\n  AUTH_ACCESS_TOKEN_SECRET: z.string().min(32),\n  AUTH_ACCESS_TOKEN_TTL: z.string().default('15m'),\n  AUTH_REFRESH_TOKEN_DAYS: z.coerce.number().int().min(1).max(90).default(14)
+  MONGODB_URI: z.string().min(1).default('mongodb://localhost:27017/forgeops'),
+  AUTH_ACCESS_TOKEN_SECRET: z.string().min(32),
+  AUTH_ACCESS_TOKEN_TTL: z.string().default('15m'),
+  AUTH_REFRESH_TOKEN_DAYS: z.coerce.number().int().min(1).max(90).default(14)
 });
 
 const parsed = envSchema.safeParse(process.env);
