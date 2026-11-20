@@ -26,7 +26,7 @@ export function signAccessToken(claims: AccessClaims): string {
   const options: SignOptions = {
     algorithm: 'HS256',
     // Zod validates the configured duration at the application boundary.
-    expiresIn: env.AUTH_ACCESS_TOKEN_TTL as SignOptions['expiresIn']
+    expiresIn: env.AUTH_ACCESS_TOKEN_TTL as NonNullable<SignOptions['expiresIn']>
   };
   return jwt.sign(claims, env.AUTH_ACCESS_TOKEN_SECRET, options);
 }
