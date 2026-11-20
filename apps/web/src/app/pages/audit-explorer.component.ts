@@ -17,7 +17,7 @@ interface AuditResponse { data: { events: AuditEvent[]; pagination: { page: numb
  <label>Action<select [(ngModel)]="action"><option value="">All actions</option><option value="created">Created</option><option value="updated">Updated</option><option value="archived">Archived</option><option value="acknowledged">Acknowledged</option><option value="resolved">Resolved</option></select></label>
  <label>From<input type="date" [(ngModel)]="from"></label><label>To<input type="date" [(ngModel)]="to"></label>
  <div class="filter-actions"><button (click)="apply()">Apply filters</button><button class="secondary" (click)="clear()">Clear</button></div></section>
- <p class="error" *ngIf="error">{{error}}</p><section class="events" *ngIf="events.length;else empty"><article *ngFor="let event of events"><div class="event-icon">{{icon(event.entityType)}}</div><div class="body"><div class="line"><strong>{{event.action|titlecase}} {{event.entityType|replaceUnderscore}}</strong><time>{{event.occurredAt|date:'medium'}}</time></div><p>{{event.actor.name}} <span class="role">{{event.actor.role}}</span></p><small class="id">Record ID · {{event.entityId}}</small><details *ngIf="hasChanges(event.changes)"><summary>Changed fields</summary><pre>{{event.changes|json}}</pre></details></div></article></section><ng-template #empty><section class="empty"><h2>No audit events found</h2><p>Try a different date range or remove a filter.</p></section></ng-template>
+ <p class="error" *ngIf="error">{{error}}</p><section class="events" *ngIf="events.length;else empty"><article *ngFor="let event of events"><div class="event-icon">{{icon(event.entityType)}}</div><div class="body"><div class="line"><strong>{{event.action|titlecase}} {{displayEntity(event.entityType)}}</strong><time>{{event.occurredAt|date:'medium'}}</time></div><p>{{event.actor.name}} <span class="role">{{event.actor.role}}</span></p><small class="id">Record ID · {{event.entityId}}</small><details *ngIf="hasChanges(event.changes)"><summary>Changed fields</summary><pre>{{event.changes|json}}</pre></details></div></article></section><ng-template #empty><section class="empty"><h2>No audit events found</h2><p>Try a different date range or remove a filter.</p></section></ng-template>
  <footer><span>Showing {{events.length}} of {{total}} events · Page {{page}} / {{pages||1}}</span><div><button class="secondary" [disabled]="page<=1" (click)="move(-1)">Previous</button><button class="secondary" [disabled]="page>=pages" (click)="move(1)">Next</button></div></footer>
  </section></main>`,
  styles:[`
@@ -32,6 +32,7 @@ export class AuditExplorerComponent implements OnInit {
  apply(){this.page=1;this.load();}
  clear(){this.entityType='';this.action='';this.from='';this.to='';this.page=1;this.load();}
  move(delta:number){this.page+=delta;this.load();}
+ displayEntity(type:string){return type.split('_').map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join(' ');}
  icon(type:string){return ({asset:'A',work_order:'W',facility:'F',inspection:'I',downtime_event:'D',purchase_order:'P',stock_movement:'S',asset_alert:'!',vendor_contract:'C'} as Record<string,string>)[type]??'•';}
  hasChanges(value:Record<string,unknown>|undefined){return !!value&&Object.keys(value).length>0;}
 }
