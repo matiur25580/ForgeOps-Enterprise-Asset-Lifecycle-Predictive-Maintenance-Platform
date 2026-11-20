@@ -21,6 +21,8 @@ const querySchema = z.object({
 
 function safeChanges(value: unknown, depth = 0): unknown {
   if (depth > 4 || value === null || typeof value !== 'object') return value;
+  if (value instanceof Date) return value.toISOString();
+  if (value instanceof Types.ObjectId) return value.toString();
   if (Array.isArray(value)) return value.slice(0, 30).map((item) => safeChanges(item, depth + 1));
   const output: Record<string, unknown> = {};
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
