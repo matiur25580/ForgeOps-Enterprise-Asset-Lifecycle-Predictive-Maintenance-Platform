@@ -77,7 +77,7 @@ The platform is being built as a realistic enterprise product, not a collection 
 - Personal in-app notification inbox with read/unread controls.
 - Five-minute scheduled tenant operations scans for due work, contract renewals and critical asset alerts.
 - Durable MongoDB job queue with atomic claims, expiring leases, bounded retries and backoff.
-- User-controlled email opt-in, per-category preferences and timezone-aware quiet hours.
+- Configurable tenant SLA escalation policies, user-controlled email opt-in, per-category preferences and timezone-aware quiet hours.
 - Optional SMTP email delivery and a tenant/user-scoped delivery audit ledger.
 - Graceful worker shutdown and old job-record retention cleanup.
 
@@ -307,7 +307,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [x] Verified downtime, availability, asset financials and vendor intelligence.
 - [x] Scoped reporting and CSV exports.
 - [x] Durable background jobs, scheduled operational scans and retry handling.
-- [x] Notification preferences, optional SMTP delivery and delivery audit history.
+- [x] Notification preferences, optional SMTP delivery and delivery audit history.\n- [x] Configurable overdue work-order escalation to tenant administrators and facility managers.
 - [ ] Production device ingestion and validated predictive models.
 - [ ] End-to-end browser tests, load testing and independent security review.
 - [ ] Email digest scheduling, SMS/push adapters and deferred quiet-hours delivery.
@@ -331,7 +331,7 @@ ForgeOps deliberately distinguishes implemented functionality from future integr
 - [Reporting and exports](docs/reporting/report-centre-and-exports.md)
 - [Background job engine](docs/operations/background-job-engine-and-escalation.md)
 - [Notification centre](docs/operations/notification-centre-and-workflow-alerts.md)
-- [Notification preferences and SMTP](docs/operations/notification-preferences-email-delivery.md)
+- [Notification preferences, SLA escalation and SMTP](docs/operations/notification-preferences-email-delivery.md)
 
 ## Project principles
 
