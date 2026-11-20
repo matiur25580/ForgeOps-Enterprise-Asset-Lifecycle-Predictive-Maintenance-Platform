@@ -70,7 +70,7 @@ analyticsRouter.get('/summary',async(req,res,next)=>{
    workOrders:{created:periodOrders.length,completed:completed.length,open:open.length,overdue:overdue.length,byStatus,byPriority},
    maintenance:{mttrHours:durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length*100)/100:null,mtbfHours:intervals.length?Math.round(intervals.reduce((a,b)=>a+b,0)/intervals.length*100)/100:null,correctiveWorkOrders:durations.length,repairElapsedHours:Math.round(durations.reduce((a,b)=>a+b,0)*100)/100},
    availability:{availabilityPercent:availabilityPercent===null?null:Math.round(availabilityPercent*100)/100,measuredAssets:operatingAssets.length,unmeasuredAssets:Math.max(0,assetCount-operatingAssets.length),scheduledOperatingMinutes:Math.round(scheduledMinutes),verifiedDowntimeMinutes:Math.round(verifiedDowntimeMinutes),plannedDowntimeMinutes:Math.round(plannedDowntimeMinutes),unplannedDowntimeMinutes:Math.round(unplannedDowntimeMinutes)},
-   costs:{partsIssueCost:maintenanceCosts.length<=1?(maintenanceCosts[0]?.partsIssueCost||0):null,currency:maintenanceCosts.length===1?maintenanceCosts[0].currency:null,byCurrency:maintenanceCosts,issuedLines:issuedCosts.reduce((sum:number,x:{issuedLines:number})=>sum+x.issuedLines,0)},
+   costs:{partsIssueCost:maintenanceCosts.length<=1?(maintenanceCosts[0]?.partsIssueCost||0):null,currency:maintenanceCosts.length===1?(maintenanceCosts[0]?.currency??null):null,byCurrency:maintenanceCosts,issuedLines:issuedCosts.reduce((sum:number,x:{issuedLines:number})=>sum+x.issuedLines,0)},
    trends:monthly,
    methodology:{
     mttr:'Mean elapsed hours from corrective work-order creation to completion; not technician labor time.',
