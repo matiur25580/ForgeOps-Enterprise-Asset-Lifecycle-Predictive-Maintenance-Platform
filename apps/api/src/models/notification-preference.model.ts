@@ -1,0 +1,5 @@
+import {Schema,model,Types} from 'mongoose';
+export interface NotificationPreferenceRecord{tenantId:Types.ObjectId;userId:Types.ObjectId;emailEnabled:boolean;categories:{sla:boolean;contract:boolean;asset_alert:boolean;maintenance:boolean};quietHoursEnabled:boolean;quietHoursStart?:string;quietHoursEnd?:string;timezone:string;}
+const schema=new Schema<NotificationPreferenceRecord>({tenantId:{type:Schema.Types.ObjectId,required:true,index:true},userId:{type:Schema.Types.ObjectId,required:true,index:true},emailEnabled:{type:Boolean,default:false},categories:{sla:{type:Boolean,default:true},contract:{type:Boolean,default:true},asset_alert:{type:Boolean,default:true},maintenance:{type:Boolean,default:true}},quietHoursEnabled:{type:Boolean,default:false},quietHoursStart:{type:String,match:/^(?:[01]\d|2[0-3]):[0-5]\d$/},quietHoursEnd:{type:String,match:/^(?:[01]\d|2[0-3]):[0-5]\d$/},timezone:{type:String,default:'UTC',maxlength:80}},{timestamps:true});
+schema.index({tenantId:1,userId:1},{unique:true});
+export const NotificationPreference=model<NotificationPreferenceRecord>('NotificationPreference',schema);
