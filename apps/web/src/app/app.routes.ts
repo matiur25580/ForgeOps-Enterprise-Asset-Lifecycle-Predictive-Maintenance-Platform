@@ -16,6 +16,7 @@ import { VendorIntelligenceComponent } from './pages/vendor-intelligence.compone
 import { ReportsComponent } from './pages/reports.component';
 import { NotificationsComponent } from './pages/notifications.component';
 import { NotificationPreferencesComponent } from './pages/notification-preferences.component';
+import { AuditExplorerComponent } from './pages/audit-explorer.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -34,6 +35,7 @@ export const routes: Routes = [
   { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
   { path: 'notification-preferences', component: NotificationPreferencesComponent, canActivate: [authGuard] },
+  { path: 'audit', component: AuditExplorerComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
