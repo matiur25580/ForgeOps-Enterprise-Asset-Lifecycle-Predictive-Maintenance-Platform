@@ -116,20 +116,19 @@ inventoryRouter.post('/movements',authorize('owner','admin','manager','technicia
  if(d.movementType==='issue')filter.onHand={$gte:d.quantity};
  if(d.movementType==='adjustment'&&d.quantity<0)filter.onHand={$gte:Math.abs(d.quantity)};
  const delta=d.movementType==='adjustment'?d.quantity:(d.movementType==='receipt'?d.quantity:-d.quantity);
- const before=await InventoryBalance.findOneAndUpdate(filter,{$inc:{onHand:delta},$set:{updatedBy:new Types.ObjectId(c.sub),...(d.reorderPoint!==undefined?{reorderPoint:d.reorderPoint}:{}),...(d.binLocation!==undefined?{binLocation:d.binLocation}:{})}},{new:false});
- if(!before){bad(res,'INSUFFICIENT_STOCK',409);return;}
- const after=await InventoryBalance.findById(before._id);
- if(!after){throw new Error('Inventory balance disappeared after a successful stock update.');}
+ const after=await InventoryBalance.findOneAndUpdate(filter,{$inc:{onHand:delta},$set:{updatedBy:new Types.ObjectId(c.sub),...(d.reorderPoint!==undefined?{reorderPoint:d.reorderPoint}:{}),...(d.binLocation!==undefined?{binLocation:d.binLocation}:{})}},{new:true});
+ if(!after){bad(res,'INSUFFICIENT_STOCK',409);return;}
+ const quantityBefore=after.onHand-delta;
  let movement;
  try{
-  movement=await StockMovement.create({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId),movementType:d.movementType,quantity:d.quantity,quantityBefore:before.onHand,quantityAfter:after.onHand,unitCost:d.unitCost??part.unitCost,reference:d.reference,reason:d.reason,workOrderId:d.workOrderId?new Types.ObjectId(d.workOrderId):undefined,vendorId:d.vendorId?new Types.ObjectId(d.vendorId):undefined,performedBy:new Types.ObjectId(c.sub)});
+  movement=await StockMovement.create({tenantId:new Types.ObjectId(c.tenantId),facilityId:new Types.ObjectId(d.facilityId),sparePartId:new Types.ObjectId(d.sparePartId),movementType:d.movementType,quantity:d.quantity,quantityBefore,quantityAfter:after.onHand,unitCost:d.unitCost??part.unitCost,reference:d.reference,reason:d.reason,workOrderId:d.workOrderId?new Types.ObjectId(d.workOrderId):undefined,vendorId:d.vendorId?new Types.ObjectId(d.vendorId):undefined,performedBy:new Types.ObjectId(c.sub)});
  }catch(error){
   await InventoryBalance.updateOne({_id:after._id},{$inc:{onHand:-delta}});
   throw error;
  }
  let auditRecorded=true;
  try{
-  await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:after.facilityId,entityType:'stock_movement',entityId:movement._id,action:'created',changes:{movementType:d.movementType,quantity:d.quantity,quantityBefore:before.onHand,quantityAfter:after.onHand}});
+  await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:after.facilityId,entityType:'stock_movement',entityId:movement._id,action:'created',changes:{movementType:d.movementType,quantity:d.quantity,quantityBefore,quantityAfter:after.onHand}});
  }catch(error){auditRecorded=false;console.error('Stock movement audit event could not be recorded:',error);}
  res.status(201).json({data:{movement,balance:after,auditRecorded}});
  }catch(e){next(e);}
