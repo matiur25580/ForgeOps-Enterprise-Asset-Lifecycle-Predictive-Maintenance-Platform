@@ -99,6 +99,23 @@ function nextOccurrence(date: Date, frequency: MaintenancePlanRecord['frequency'
   return next;
 }
 
+maintenanceRouter.get('/technicians', authorize('owner', 'admin', 'manager'), async (request, response, next) => {
+  try {
+    const claims = claimsFor(request);
+    const facilityId = typeof request.query.facilityId === 'string' ? request.query.facilityId : undefined;
+    if (facilityId && (!objectId(facilityId) || !inScope(claims, facilityId))) {
+      response.status(404).json({ error: { code: 'FACILITY_NOT_FOUND' } }); return;
+    }
+    const filter: Record<string, unknown> = {
+      tenantId: new Types.ObjectId(claims.tenantId), role: 'technician', status: 'active'
+    };
+    if (facilityId) filter.facilityIds = new Types.ObjectId(facilityId);
+    else if (!admin(claims)) filter.facilityIds = { $in: claims.facilityIds.map((id) => new Types.ObjectId(id)) };
+    const technicians = await User.find(filter).select('_id firstName lastName email facilityIds').sort({ firstName: 1, lastName: 1 }).lean();
+    response.status(200).json({ data: { technicians } });
+  } catch (error) { next(error); }
+});
+
 maintenanceRouter.get('/work-orders', async (request, response, next) => {
   try {
     const claims = claimsFor(request);
