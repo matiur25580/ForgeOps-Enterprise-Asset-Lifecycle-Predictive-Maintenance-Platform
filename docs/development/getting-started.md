@@ -1,0 +1,64 @@
+# Local development setup
+
+## Prerequisites
+
+- Node.js 22 or newer
+- npm 10 or newer
+- Docker Desktop or Docker Engine with the Compose plugin
+
+## 1. Install dependencies
+
+From the repository root:
+
+```bash
+npm install
+cp .env.example .env
+```
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
+
+## 2. Start MongoDB
+
+```bash
+docker compose up -d mongodb
+```
+
+The local database is exposed at `mongodb://localhost:27017/forgeops`.
+
+## 3. Start the API
+
+In a terminal at the repository root:
+
+```bash
+npm run dev:api
+```
+
+The API listens on `http://localhost:4000`.
+
+- `GET /health/live` checks whether the process is running.
+- `GET /health/ready` checks whether MongoDB is connected.
+- `GET /api/v1` returns API service metadata.
+
+## 4. Start the Angular application
+
+In a second terminal at the repository root:
+
+```bash
+npm run dev:web
+```
+
+Open `http://localhost:4200`.
+
+## 5. Validate the workspaces
+
+```bash
+npm run typecheck
+npm run build
+```
+
+## Notes
+
+- The dashboard currently uses clearly labelled illustrative preview data; it is not connected to production APIs yet.
+- Do not commit `.env`, credentials, production data, or real access tokens.
+- The access-token secret in `.env.example` is a placeholder, not a production-ready secret.
+- MongoDB is the only container started by the current Compose file. The API and web app run through the local Node toolchain.
