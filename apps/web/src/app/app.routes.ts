@@ -14,6 +14,7 @@ import { DowntimeComponent } from './pages/downtime.component';
 import { FinancialsComponent } from './pages/financials.component';
 import { VendorIntelligenceComponent } from './pages/vendor-intelligence.component';
 import { ReportsComponent } from './pages/reports.component';
+import { NotificationsComponent } from './pages/notifications.component';
 
 export const routes: Routes = [
   { path: 'login', component: AuthComponent },
@@ -30,6 +31,7 @@ export const routes: Routes = [
   { path: 'financials', component: FinancialsComponent, canActivate: [authGuard] },
   { path: 'vendors', component: VendorIntelligenceComponent, canActivate: [authGuard] },
   { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
+  { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'assets' },
   { path: '**', redirectTo: 'assets' }
 ];
