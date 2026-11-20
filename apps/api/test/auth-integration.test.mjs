@@ -1,6 +1,5 @@
 import test, { before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import type { AddressInfo } from 'node:net';
 
 // Start an isolated MongoDB instance before importing the app because its
 // environment module validates configuration during module initialization.
@@ -72,7 +71,7 @@ before(async () => {
     server.once('listening', resolve);
     server.once('error', reject);
   });
-  const address = server.address() as AddressInfo;
+  const address = server.address();
   baseUrl = `http://127.0.0.1:${address.port}`;
 });
 
