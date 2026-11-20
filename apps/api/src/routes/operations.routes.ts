@@ -106,7 +106,8 @@ operationsRouter.post('/facilities', authorize('owner', 'admin'), async (request
 
 operationsRouter.patch('/facilities/:facilityId', authorize('owner', 'admin'), async (request, response, next) => {
   try {
-    if (!Types.ObjectId.isValid(request.params.facilityId)) {
+    const facilityId = request.params.facilityId;
+    if (typeof facilityId !== 'string' || !Types.ObjectId.isValid(facilityId)) {
       response.status(400).json({ error: { code: 'INVALID_FACILITY_ID' } });
       return;
     }
@@ -117,7 +118,7 @@ operationsRouter.patch('/facilities/:facilityId', authorize('owner', 'admin'), a
     }
     const claims = claimsFor(request);
     const facility = await Facility.findOneAndUpdate(
-      { _id: request.params.facilityId, tenantId: claims.tenantId },
+      { _id: facilityId, tenantId: claims.tenantId },
       { $set: parsed.data },
       { new: true, runValidators: true }
     );
@@ -261,7 +262,8 @@ operationsRouter.get('/assets/:assetId/audit', async (request, response, next) =
 
 operationsRouter.get('/assets/:assetId', async (request, response, next) => {
   try {
-    if (!Types.ObjectId.isValid(request.params.assetId)) {
+    const assetId = request.params.assetId;
+    if (typeof assetId !== 'string' || !Types.ObjectId.isValid(assetId)) {
       response.status(400).json({ error: { code: 'INVALID_ASSET_ID' } });
       return;
     }
@@ -285,7 +287,8 @@ operationsRouter.get('/assets/:assetId', async (request, response, next) => {
 
 operationsRouter.patch('/assets/:assetId', authorize('owner', 'admin', 'manager'), async (request, response, next) => {
   try {
-    if (!Types.ObjectId.isValid(request.params.assetId)) {
+    const assetId = request.params.assetId;
+    if (typeof assetId !== 'string' || !Types.ObjectId.isValid(assetId)) {
       response.status(400).json({ error: { code: 'INVALID_ASSET_ID' } });
       return;
     }
@@ -296,7 +299,7 @@ operationsRouter.patch('/assets/:assetId', authorize('owner', 'admin', 'manager'
     }
     const claims = claimsFor(request);
     const existing = await Asset.findOne({
-      _id: request.params.assetId,
+      _id: assetId,
       tenantId: claims.tenantId,
       archivedAt: null
     });
@@ -366,7 +369,7 @@ operationsRouter.delete('/assets/:assetId', authorize('owner', 'admin', 'manager
     }
     const claims = claimsFor(request);
     const filter: FilterQuery<AssetRecord> = {
-      _id: request.params.assetId,
+      _id: assetId,
       tenantId: claims.tenantId,
       archivedAt: null
     };
