@@ -4,8 +4,10 @@ import {WorkOrder} from '../models/work-order.model.js';
 import {VendorContract} from '../models/vendor-contract.model.js';
 import {AssetAlert} from '../models/asset-alert.model.js';
 import {User} from '../models/user.model.js';
+import {NotificationPreference} from '../models/notification-preference.model.js';
+import {enqueueBackgroundJob} from './background-jobs.service.js';
 async function createNotification(input:{tenantId:Types.ObjectId;userId:Types.ObjectId;facilityId?:Types.ObjectId;category:'sla'|'contract'|'asset_alert';title:string;message:string;severity:'warning'|'critical';resourceType:'work_order'|'vendor_contract'|'asset_alert';resourceId:Types.ObjectId;dedupeKey:string}){
- try{const result=await Notification.updateOne({tenantId:input.tenantId,userId:input.userId,dedupeKey:input.dedupeKey},{$setOnInsert:input},{upsert:true});return result.upsertedCount??0;}
+ try{const result=await Notification.updateOne({tenantId:input.tenantId,userId:input.userId,dedupeKey:input.dedupeKey},{$setOnInsert:input},{upsert:true});if(result.upsertedCount){const [notification,preference]=await Promise.all([Notification.findOne({tenantId:input.tenantId,userId:input.userId,dedupeKey:input.dedupeKey}).select('_id').lean(),NotificationPreference.findOne({tenantId:input.tenantId,userId:input.userId}).lean()]);if(notification&&preference?.emailEnabled&&preference.categories[input.category])await enqueueBackgroundJob({tenantId:input.tenantId,type:'notification_email',dedupeKey:'notification-email:'+notification._id,payload:{notificationId:notification._id,requestedBy:input.userId}});}return result.upsertedCount??0;}
  catch(error){if(error&&typeof error==='object'&&'code'in error&&(error as {code?:number}).code===11000)return 0;throw error;}
 }
 export async function runOperationsScan(tenantIdValue:string,facilityIds?:string[]){
