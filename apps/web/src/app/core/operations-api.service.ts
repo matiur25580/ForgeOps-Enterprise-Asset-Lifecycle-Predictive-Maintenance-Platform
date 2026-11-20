@@ -14,7 +14,12 @@ export class OperationsApiService {
   get authenticated(): boolean { return this.accessToken !== null; }
 
   login(input: { organizationSlug: string; email: string; password: string }): Observable<unknown> {
-    return this.http.post<{ data: { accessToken: string } }>(`${API_BASE}/auth/login`, input, { withCredentials: true })
+    return this.http.post<{ data: { accessToken?: string; mfaRequired?: boolean; challengeToken?: string } }>(`${API_BASE}/auth/login`, input, { withCredentials: true })
+      .pipe(map((response) => { if (response.data.accessToken) this.accessToken = response.data.accessToken; return response; }));
+  }
+
+  verifyMfaLogin(challengeToken: string, code: string): Observable<unknown> {
+    return this.http.post<{ data: { accessToken: string } }>(`${API_BASE}/auth/login/mfa`, { challengeToken, code }, { withCredentials: true })
       .pipe(map((response) => { this.accessToken = response.data.accessToken; return response; }));
   }
 
