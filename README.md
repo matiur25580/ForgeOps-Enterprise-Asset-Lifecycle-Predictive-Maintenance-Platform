@@ -2,7 +2,7 @@
 
 > A multi-tenant enterprise platform for managing physical assets, maintenance operations, inspections, spare parts, vendors, and equipment health across multiple facilities.
 
-**Project status:** Phase 11 — verified downtime, asset availability and maintenance cost accounting  
+**Project status:** Phase 12 — asset financial intelligence, depreciation, warranty and TCO  
 **Primary stack:** MEAN — MongoDB, Express.js, Angular, Node.js  
 **Language:** TypeScript across the application  
 **Repository:** [ForgeOps](https://github.com/matiur25580/ForgeOps-Enterprise-Asset-Lifecycle-Predictive-Maintenance-Platform)
@@ -201,6 +201,9 @@ Metric definitions and calculation windows will be documented so dashboards are 
 - [x] Verified, schedule-weighted asset availability calculation
 - [x] Work-order labor and external service cost capture
 - [x] Multi-currency maintenance cost breakdowns without false FX aggregation
+- [x] Straight-line asset book depreciation with salvage value and useful-life assumptions
+- [x] Warranty expiry and 90-day exposure tracking
+- [x] Currency-grouped asset Total Cost of Ownership reporting
 - [ ] Asset health trend charts
 - [ ] Facility operations dashboard
 - [ ] MTTR, MTBF, downtime, and cost analytics
@@ -214,7 +217,7 @@ Metric definitions and calculation windows will be documented so dashboards are 
 
 ## Procurement consistency note
 
-Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).\n\n## Inspection and compliance\n\nReusable checklist templates, inspection evidence, failed findings and corrective-work-order linkage are documented in [inspections and compliance](docs/operations/inspections-and-compliance.md). Recurring schedules, independent review and compliance summaries are covered in [inspection scheduling, review and reporting](docs/operations/inspection-scheduling-review-and-reporting.md).\n\n## Operations analytics\n\nThe live analytics workspace and KPI methodology are documented in [operations analytics](docs/analytics/operations-analytics.md). MTTR/MTBF are explicitly labelled work-order-derived proxies. Verified availability now uses independently reviewed downtime events and configured weekly operating hours; maintenance costs are grouped by currency without conversion.
+Procurement receipt processing validates ordered quantities, applies atomic facility stock increments, and records stock movement and audit history. Cross-document crash-safe ACID behavior is not claimed; strict all-or-nothing receipt posting requires MongoDB replica-set transactions. See [procurement and goods receipt workflows](docs/operations/procurement-and-goods-receipts.md).\n\n## Telemetry alert response\n\nTenant-level threshold overrides, alert acknowledgement/resolution, audit events and corrective work-order linking are documented in [telemetry alerts and response](docs/operations/telemetry-alerts-and-response.md).\n\n## Inspection and compliance\n\nReusable checklist templates, inspection evidence, failed findings and corrective-work-order linkage are documented in [inspections and compliance](docs/operations/inspections-and-compliance.md). Recurring schedules, independent review and compliance summaries are covered in [inspection scheduling, review and reporting](docs/operations/inspection-scheduling-review-and-reporting.md).\n\n## Operations analytics\n\nThe live analytics workspace and KPI methodology are documented in [operations analytics](docs/analytics/operations-analytics.md). Asset book depreciation, warranty exposure and lifecycle TCO are available in the protected [financial intelligence workspace](docs/finance/asset-financial-intelligence.md). MTTR/MTBF are explicitly labelled work-order-derived proxies. Verified availability now uses independently reviewed downtime events and configured weekly operating hours; maintenance costs are grouped by currency without conversion.
 
 ## 8. Local development
 
