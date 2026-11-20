@@ -31,7 +31,7 @@ notificationsRouter.post('/dispatch',async(req,res,next)=>{try{
  }catch(e){next(e);}});
 notificationsRouter.get('/dispatch/:jobId',async(req,res,next)=>{try{
  const c=claims(req),id=String(req.params.jobId??'');if(!Types.ObjectId.isValid(id)){res.status(404).json({error:{code:'JOB_NOT_FOUND'}});return;}
- const job=await BackgroundJob.findOne({_id:new Types.ObjectId(id),tenantId:new Types.ObjectId(c.tenantId),'payload.requestedBy':new Types.ObjectId(c.sub)}).select('status attempts maxAttempts availableAt startedAt completedAt lastError createdAt').lean();
+ const job=await BackgroundJob.findOne({_id:new Types.ObjectId(id),tenantId:new Types.ObjectId(c.tenantId),'payload.requestedBy':new Types.ObjectId(c.sub)}).select('status attempts maxAttempts availableAt startedAt completedAt createdAt').lean();
  if(!job){res.status(404).json({error:{code:'JOB_NOT_FOUND'}});return;}
  res.status(200).json({data:{job}});
  }catch(e){next(e);}});
