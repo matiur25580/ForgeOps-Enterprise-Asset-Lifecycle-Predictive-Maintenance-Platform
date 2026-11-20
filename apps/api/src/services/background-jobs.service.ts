@@ -1,6 +1,6 @@
 import {Types} from 'mongoose';
 import {BackgroundJob,type BackgroundJobType} from '../models/background-job.model.js';
-export async function enqueueBackgroundJob(input:{tenantId:Types.ObjectId;type:BackgroundJobType;dedupeKey:string;payload?:{facilityIds?:Types.ObjectId[];requestedBy?:Types.ObjectId};maxAttempts?:number;availableAt?:Date}){
+export async function enqueueBackgroundJob(input:{tenantId:Types.ObjectId;type:BackgroundJobType;dedupeKey:string;payload?:{facilityIds?:Types.ObjectId[];requestedBy?:Types.ObjectId;notificationId?:Types.ObjectId};maxAttempts?:number;availableAt?:Date}){
  try{
   return await BackgroundJob.findOneAndUpdate({tenantId:input.tenantId,dedupeKey:input.dedupeKey},{$setOnInsert:{...input,status:'queued',attempts:0,maxAttempts:input.maxAttempts??5,availableAt:input.availableAt??new Date()}},{upsert:true,new:true});
  }catch(error){if(error&&typeof error==='object'&&'code'in error&&(error as {code?:number}).code===11000)return BackgroundJob.findOne({tenantId:input.tenantId,dedupeKey:input.dedupeKey});throw error;}
