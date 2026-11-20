@@ -273,6 +273,28 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   },null);
   assert.equal(inactiveAccountMfaLogin.status,401);
   assert.equal(inactiveAccountMfaLogin.data.error.code,'MFA_CODE_INVALID_OR_ALREADY_USED');
+
+  const {RefreshSession}=await import('../src/models/refresh-session.model.ts');
+  const {hashToken,refreshExpiry}=await import('../src/auth/token.service.ts');
+  const disabledRefreshToken='disabled-account-refresh-token-for-regression-test';
+  const refreshFamilyId='disabled-account-refresh-family';
+  const disabledSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(disabledRefreshToken),
+    familyId:refreshFamilyId,
+    expiresAt:refreshExpiry()
+  });
+  const disabledRefreshResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+disabledRefreshToken}
+  });
+  const disabledRefreshBody=await disabledRefreshResponse.json();
+  assert.equal(disabledRefreshResponse.status,401);
+  assert.equal(disabledRefreshBody.error.code,'ACCOUNT_UNAVAILABLE');
+  const revokedDisabledSession=await RefreshSession.findById(disabledSession._id);
+  assert.ok(revokedDisabledSession.revokedAt);
+
   await User.updateOne({email:account.email},{$set:{status:'active'}});
 
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
