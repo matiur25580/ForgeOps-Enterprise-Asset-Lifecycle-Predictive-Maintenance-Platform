@@ -249,6 +249,15 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(stillEnabled.status,200);
   assert.equal(stillEnabled.data.data.enabled,true);
 
+  await User.updateOne({email:account.email},{$set:{status:'suspended'}});
+  const inactiveAccountProof=await service.consumeMfaProof(
+    (await User.findOne({email:account.email}))._id.toString(),
+    (await User.findOne({email:account.email})).tenantId.toString(),
+    concurrentRotation.data.data.recoveryCodes[4]
+  );
+  assert.equal(inactiveAccountProof,false);
+  await User.updateOne({email:account.email},{$set:{status:'active'}});
+
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:concurrentRotation.data.data.recoveryCodes[index]
