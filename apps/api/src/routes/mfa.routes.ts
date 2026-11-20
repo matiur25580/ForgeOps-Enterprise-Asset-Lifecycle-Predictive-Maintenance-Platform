@@ -18,10 +18,9 @@ async function recordChange(tenantId:string,userId:string,enabled:boolean){
 
 mfaRouter.get('/status',async(req,res,next)=>{
   try{
-    const user=await User.findOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active'}).select('mfaEnabled mfaRecoveryCodeHashes');
+    const user=await User.findOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active'}).select('mfaEnabled +mfaRecoveryCodeHashes');
     if(!user){res.status(404).json({error:{code:'USER_NOT_FOUND'}});return;}
-    const codes=await User.findById(user._id).select('+mfaRecoveryCodeHashes');
-    res.status(200).json({data:{enabled:user.mfaEnabled,recoveryCodesRemaining:codes?.mfaRecoveryCodeHashes.length??0}});
+    res.status(200).json({data:{enabled:user.mfaEnabled,recoveryCodesRemaining:user.mfaRecoveryCodeHashes.length}});
   }catch(error){next(error);}
 });
 
