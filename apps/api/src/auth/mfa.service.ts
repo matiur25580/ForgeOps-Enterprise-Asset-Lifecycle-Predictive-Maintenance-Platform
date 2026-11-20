@@ -34,8 +34,8 @@ export function generateTotpCode(secret:string,now=Date.now()):string{
 function codeFor(secret:string,step:number):string{
   const counter=Buffer.alloc(8);counter.writeBigUInt64BE(BigInt(step));
   const digest=createHmac('sha1',decodeBase32(secret)).update(counter).digest();
-  const offset=digest[digest.length-1]&15;
-  const binary=((digest[offset]&127)<<24)|((digest[offset+1]&255)<<16)|((digest[offset+2]&255)<<8)|(digest[offset+3]&255);
+  const offset=digest[digest.length-1]!&15;
+  const binary=((digest[offset]!&127)<<24)|((digest[offset+1]!&255)<<16)|((digest[offset+2]!&255)<<8)|(digest[offset+3]!&255);
   return String(binary%1_000_000).padStart(6,'0');
 }
 export function verifyTotp(secret:string,code:string,now=Date.now(),lastUsedStep=-1):number|null{
