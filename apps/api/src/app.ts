@@ -21,6 +21,7 @@ import { downtimeRouter } from './routes/downtime.routes.js';
 import { financialRouter } from './routes/financial.routes.js';
 import { vendorIntelligenceRouter } from './routes/vendor-intelligence.routes.js';
 import { reportsRouter } from './routes/reports.routes.js';
+import { notificationsRouter } from './routes/notifications.routes.js';
 
 export const app = express();
 
@@ -76,4 +77,5 @@ app.use('/api/v1/downtime', downtimeRouter);
 app.use('/api/v1/financial', financialRouter);
 app.use('/api/v1/vendors', vendorIntelligenceRouter);
 app.use('/api/v1/reports', reportsRouter);
+app.use('/api/v1/notifications', notificationsRouter);
 app.use(errorHandler);
