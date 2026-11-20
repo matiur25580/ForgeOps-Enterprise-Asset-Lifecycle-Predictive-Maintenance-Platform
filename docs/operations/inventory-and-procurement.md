@@ -31,7 +31,7 @@ Parts are tenant-wide catalog records. A tenant-scoped unique part number identi
 
 Movement types:
 - `receipt`: positive quantity; may reference a vendor, purchase reference and unit cost
-- `issue`: positive quantity consumed from on-hand stock; may link to a work order in the same tenant and facility
+- `issue`: positive quantity consumed from on-hand stock; a linked work order must be in progress and in the same tenant/facility; technicians must issue against a work order assigned to themselves
 - `adjustment`: signed quantity for a documented count correction; cannot reduce on-hand below zero
 
 Each balance is uniquely keyed by tenant, facility and spare part. Stock updates use an atomic conditional MongoDB update that returns the pre-update balance, so concurrent issues cannot drive on-hand below zero and each ledger entry captures the correct before/after quantities. If the movement-ledger insert fails, the balance is compensated. Audit events are supplementary: if the audit-event insert fails after the movement is committed, the API still returns the successful movement with `auditRecorded: false` so clients do not retry and double-issue stock. For strict multi-document ACID guarantees under process crashes, deploy MongoDB as a replica set and move balance, ledger and audit writes into a session transaction; this release does not claim that cross-document crash atomicity.
