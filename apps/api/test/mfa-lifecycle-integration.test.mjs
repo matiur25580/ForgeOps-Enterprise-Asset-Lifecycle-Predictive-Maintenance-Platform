@@ -297,6 +297,42 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   await User.updateOne({email:account.email},{$set:{status:'active'}});
 
+  const reusedRefreshToken='refresh-token-reuse-regression-test-token';
+  const reuseSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(reusedRefreshToken),
+    familyId:'refresh-token-reuse-family',
+    expiresAt:refreshExpiry()
+  });
+  const firstRefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+reusedRefreshToken}
+  });
+  assert.equal(firstRefresh.status,200);
+  const rotatedCookie=firstRefresh.headers.get('set-cookie')??'';
+  const rotatedRefreshToken=rotatedCookie.match(/forgeops_refresh=([^;]+)/)?.[1];
+  assert.ok(rotatedRefreshToken);
+  assert.notEqual(rotatedRefreshToken,reusedRefreshToken);
+
+  const replayedRefresh=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+reusedRefreshToken}
+  });
+  const replayedRefreshBody=await replayedRefresh.json();
+  assert.equal(replayedRefresh.status,401);
+  assert.equal(replayedRefreshBody.error.code,'REFRESH_TOKEN_INVALID');
+  const revokedReuseSession=await RefreshSession.findById(reuseSession._id);
+  assert.ok(revokedReuseSession.revokedAt);
+
+  const rotatedAfterReuse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+rotatedRefreshToken}
+  });
+  const rotatedAfterReuseBody=await rotatedAfterReuse.json();
+  assert.equal(rotatedAfterReuse.status,401);
+  assert.equal(rotatedAfterReuseBody.error.code,'REFRESH_TOKEN_INVALID');
+
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
     password:account.password,
     code:concurrentRotation.data.data.recoveryCodes[index]
