@@ -31,7 +31,7 @@ downtimeRouter.get('/events',async(req,res,next)=>{try{
  }catch(e){next(e);}});
 downtimeRouter.post('/events',authorize('owner','admin','manager','technician'),async(req,res,next)=>{try{
  const parsed=createSchema.safeParse(req.body);if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR',details:parsed.error.flatten()}});return;}
- const c=claims(req);if(parsed.data.startedAt>Date.now()+5*60*1000){res.status(400).json({error:{code:'DOWNTIME_START_IN_FUTURE'}});return;}
+ const c=claims(req);if(parsed.data.startedAt.getTime()>Date.now()+5*60*1000){res.status(400).json({error:{code:'DOWNTIME_START_IN_FUTURE'}});return;}
  const asset=await Asset.findOne({_id:parsed.data.assetId,tenantId:c.tenantId,archivedAt:null}).select('_id facilityId');
  if(!asset){res.status(404).json({error:{code:'ASSET_NOT_FOUND'}});return;}
  if(!canFacility(c,asset.facilityId.toString())){res.status(404).json({error:{code:'ASSET_NOT_FOUND'}});return;}
@@ -49,7 +49,7 @@ downtimeRouter.patch('/events/:eventId/resolve',async(req,res,next)=>{try{
  if(!event){res.status(404).json({error:{code:'DOWNTIME_EVENT_NOT_FOUND'}});return;}
  if(event.status!=='open'){res.status(409).json({error:{code:'DOWNTIME_EVENT_ALREADY_RESOLVED'}});return;}
  if(c.role==='technician'&&event.reportedBy.toString()!==c.sub){res.status(403).json({error:{code:'FORBIDDEN'}});return;}
- const endedAt=parsed.data.endedAt??new Date();if(endedAt<=event.startedAt||endedAt>Date.now()+5*60*1000){res.status(400).json({error:{code:'INVALID_DOWNTIME_END'}});return;}
+ const endedAt=parsed.data.endedAt??new Date();if(endedAt.getTime()<=event.startedAt.getTime()||endedAt.getTime()>Date.now()+5*60*1000){res.status(400).json({error:{code:'INVALID_DOWNTIME_END'}});return;}
  event.endedAt=endedAt;event.status='resolved';event.resolvedBy=new Types.ObjectId(c.sub);event.verificationStatus='pending';await event.save();
  await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:event.facilityId,entityType:'downtime_event',entityId:event._id,action:'updated',changes:{status:'resolved',endedAt}});
  res.status(200).json({data:{event}});
