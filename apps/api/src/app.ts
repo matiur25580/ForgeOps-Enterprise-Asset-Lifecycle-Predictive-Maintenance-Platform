@@ -12,6 +12,7 @@ import { accountRouter } from './routes/account.routes.js';
 import { operationsRouter } from './routes/operations.routes.js';
 import { maintenanceRouter } from './routes/maintenance.routes.js';
 import { inventoryRouter } from './routes/inventory.routes.js';
+import { procurementRouter } from './routes/procurement.routes.js';
 
 export const app = express();
 
@@ -58,4 +59,5 @@ app.use('/api/v1/account', accountRouter);
 app.use('/api/v1/operations', operationsRouter);
 app.use('/api/v1/maintenance', maintenanceRouter);
 app.use('/api/v1/inventory', inventoryRouter);
+app.use('/api/v1/procurement', procurementRouter);
 app.use(errorHandler);
