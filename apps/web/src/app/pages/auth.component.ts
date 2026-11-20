@@ -24,7 +24,7 @@ import { OperationsApiService } from '../core/operations-api.service';
         <div class="error" *ngIf="error">{{error}}</div>
         <button class="submit" [disabled]="busy">{{busy?'Please wait…':registerMode?'Create secure workspace':'Sign in securely'}}</button>
       </form>
-      <form *ngIf="mfaChallenge" (ngSubmit)="verifyMfa()" class="mfa-form"><label>Authenticator or recovery code<input name="mfaCode" [(ngModel)]="mfaCode" required minlength="6" maxlength="32" autocomplete="one-time-code" placeholder="000000"></label><button class="submit" [disabled]="busy">{{busy?'Verifying…':'Verify and continue'}}</button><button type="button" class="back" (click)="cancelMfa()">Back to sign in</button></form>
+      <form *ngIf="mfaChallenge" (ngSubmit)="verifyMfa()" class="mfa-form"><div class="error" *ngIf="error">{{error}}</div><label>Authenticator or recovery code<input name="mfaCode" [(ngModel)]="mfaCode" required minlength="6" maxlength="32" autocomplete="one-time-code" placeholder="000000"></label><button class="submit" [disabled]="busy">{{busy?'Verifying…':'Verify and continue'}}</button><button type="button" class="back" (click)="cancelMfa()">Back to sign in</button></form>
       <div class="security"><span>▣</span> Protected with encrypted sessions and role-based access</div>
     </div><footer>© 2026 ForgeOps · Enterprise operations platform</footer></section>
   </main>`,
