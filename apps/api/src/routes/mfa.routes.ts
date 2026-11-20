@@ -31,6 +31,7 @@ mfaRouter.post('/setup',mfaLimiter,async(req,res,next)=>{
     if(user.mfaEnabled){res.status(409).json({error:{code:'MFA_ALREADY_ENABLED'}});return;}
     const secret=createTotpSecret();
     user.mfaPendingSecretEncrypted=encryptSecret(secret);
+    user.mfaPendingSecretExpiresAt=new Date(Date.now()+10*60*1000);
     await user.save();
     res.status(200).json({data:{secret,otpauthUri:otpAuthUri(secret,user.email),issuer:'ForgeOps',account:user.email}});
   }catch(error){next(error);}
@@ -40,14 +41,15 @@ mfaRouter.post('/confirm',mfaLimiter,async(req,res,next)=>{
   try{
     const parsed=codeSchema.safeParse(req.body);
     if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR'}});return;}
-    const user=await User.findOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active'}).select('+mfaPendingSecretEncrypted');
-    if(!user?.mfaPendingSecretEncrypted){res.status(409).json({error:{code:'MFA_SETUP_NOT_STARTED'}});return;}
+    const user=await User.findOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active'}).select('+mfaPendingSecretEncrypted +mfaPendingSecretExpiresAt');
+    if(!user?.mfaPendingSecretEncrypted||!user.mfaPendingSecretExpiresAt||user.mfaPendingSecretExpiresAt<=new Date()){res.status(409).json({error:{code:'MFA_SETUP_NOT_STARTED'}});return;}
     const secret=decryptSecret(user.mfaPendingSecretEncrypted);
     const step=verifyTotp(secret,parsed.data.code);
     if(step===null){res.status(400).json({error:{code:'MFA_CODE_INVALID'}});return;}
     const recoveryCodes=createRecoveryCodes();
     user.mfaSecretEncrypted=user.mfaPendingSecretEncrypted;
     user.set('mfaPendingSecretEncrypted',undefined);
+    user.set('mfaPendingSecretExpiresAt',undefined);
     user.mfaRecoveryCodeHashes=recoveryCodes.map(hashRecoveryCode);
     user.mfaLastUsedStep=step;
     user.mfaEnabled=true;
@@ -66,7 +68,7 @@ mfaRouter.post('/disable',mfaLimiter,async(req,res,next)=>{
     if(!user.mfaEnabled||!user.mfaSecretEncrypted){res.status(409).json({error:{code:'MFA_NOT_ENABLED'}});return;}
     if(!await bcrypt.compare(parsed.data.password,user.passwordHash)){res.status(401).json({error:{code:'PASSWORD_INVALID'}});return;}
     if(!await consumeMfaProof(user._id.toString(),user.tenantId.toString(),parsed.data.code)){res.status(401).json({error:{code:'MFA_CODE_INVALID_OR_ALREADY_USED'}});return;}
-    await User.updateOne({_id:user._id,tenantId:user.tenantId},{$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1}});
+    await User.updateOne({_id:user._id,tenantId:user.tenantId},{$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}});
     await recordChange(req.auth!.tenantId,req.auth!.sub,false);
     res.status(200).json({data:{enabled:false}});
   }catch(error){next(error);}
