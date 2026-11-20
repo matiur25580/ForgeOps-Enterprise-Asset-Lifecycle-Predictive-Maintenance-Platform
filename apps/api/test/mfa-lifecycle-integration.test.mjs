@@ -249,13 +249,30 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(stillEnabled.status,200);
   assert.equal(stillEnabled.data.data.enabled,true);
 
+  const inactiveAccountLogin=await call('/api/v1/auth/login','POST',{
+    organizationSlug:account.organizationSlug,
+    email:account.email,
+    password:account.password
+  },null);
+  assert.equal(inactiveAccountLogin.status,200);
+  assert.equal(inactiveAccountLogin.data.data.mfaRequired,true);
+
   await User.updateOne({email:account.email},{$set:{status:'disabled'}});
+  const inactiveUser=await User.findOne({email:account.email});
+  assert.ok(inactiveUser);
   const inactiveAccountProof=await service.consumeMfaProof(
-    (await User.findOne({email:account.email}))._id.toString(),
-    (await User.findOne({email:account.email})).tenantId.toString(),
+    inactiveUser._id.toString(),
+    inactiveUser.tenantId.toString(),
     concurrentRotation.data.data.recoveryCodes[4]
   );
   assert.equal(inactiveAccountProof,false);
+
+  const inactiveAccountMfaLogin=await call('/api/v1/auth/login/mfa','POST',{
+    challengeToken:inactiveAccountLogin.data.data.challengeToken,
+    code:concurrentRotation.data.data.recoveryCodes[5]
+  },null);
+  assert.equal(inactiveAccountMfaLogin.status,401);
+  assert.equal(inactiveAccountMfaLogin.data.error.code,'MFA_CODE_INVALID_OR_ALREADY_USED');
   await User.updateOne({email:account.email},{$set:{status:'active'}});
 
   const concurrentDisables=await Promise.all([2,3].map(index=>call('/api/v1/mfa/disable','POST',{
