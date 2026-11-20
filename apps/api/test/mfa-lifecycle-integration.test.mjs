@@ -68,9 +68,16 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(expiredConfirmation.status,409);
   assert.equal(expiredConfirmation.data.error.code,'MFA_SETUP_NOT_STARTED');
 
+  const setupBeforeRotation=await call('/api/v1/mfa/setup','POST',{});
+  assert.equal(setupBeforeRotation.status,200);
   const setup=await call('/api/v1/mfa/setup','POST',{});
   assert.equal(setup.status,200);
   const secret=setup.data.data.secret;
+  const supersededConfirmation=await call('/api/v1/mfa/confirm','POST',{
+    code:service.generateTotpCode(setupBeforeRotation.data.data.secret)
+  });
+  assert.equal(supersededConfirmation.status,400);
+  assert.equal(supersededConfirmation.data.error.code,'MFA_CODE_INVALID');
   const rejectedConfirmation=await call('/api/v1/mfa/confirm','POST',{code:'abcdef'});
   assert.equal(rejectedConfirmation.status,400);
   assert.equal(rejectedConfirmation.data.error.code,'MFA_CODE_INVALID');
