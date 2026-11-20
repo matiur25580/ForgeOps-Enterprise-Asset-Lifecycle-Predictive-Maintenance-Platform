@@ -99,14 +99,15 @@ inventoryRouter.post('/movements',authorize('owner','admin','manager','technicia
  try{
  const parsed=movementSchema.safeParse(req.body);if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR',details:parsed.error.flatten()}});return;}
  const c=claimsFor(req);const d=parsed.data;if(!inScope(c,d.facilityId)){bad(res,'FACILITY_SCOPE_FORBIDDEN',403);return;}
+ if(c.role==='technician'&&d.movementType==='issue'&&!d.workOrderId){bad(res,'WORK_ORDER_REQUIRED',403);return;}
  const [facility,part,vendor,workOrder]=await Promise.all([
   Facility.findOne({_id:d.facilityId,tenantId:c.tenantId,status:'active'}).select('_id'),
   SparePart.findOne({_id:d.sparePartId,tenantId:c.tenantId,active:true}).select('_id unitCost'),
   d.vendorId?Vendor.findOne({_id:d.vendorId,tenantId:c.tenantId,status:'active'}).select('_id'):Promise.resolve(true),
-  d.workOrderId?WorkOrder.findOne({_id:d.workOrderId,tenantId:c.tenantId,facilityId:d.facilityId}).select('_id'):Promise.resolve(true)
+  d.workOrderId?WorkOrder.findOne({_id:d.workOrderId,tenantId:c.tenantId,facilityId:d.facilityId,status:'in_progress',...(c.role==='technician'?{assignedTo:c.sub}:{})}).select('_id'):Promise.resolve(true)
  ]);
  if(!facility){bad(res,'FACILITY_NOT_FOUND',404);return;}if(!part){bad(res,'SPARE_PART_NOT_FOUND',404);return;}
- if(d.vendorId&&!vendor){bad(res,'VENDOR_NOT_FOUND',404);return;}if(d.workOrderId&&!workOrder){bad(res,'WORK_ORDER_NOT_FOUND',404);return;}
+ if(d.vendorId&&!vendor){bad(res,'VENDOR_NOT_FOUND',404);return;}if(d.workOrderId&&!workOrder){bad(res,'WORK_ORDER_NOT_FOUND_OR_NOT_IN_PROGRESS',404);return;}
  if(d.movementType==='receipt'&&d.quantity<0){bad(res,'RECEIPT_QUANTITY_MUST_BE_POSITIVE');return;}
  if(d.movementType==='issue'&&d.quantity<=0){bad(res,'ISSUE_QUANTITY_MUST_BE_POSITIVE');return;}
  if(d.movementType==='adjustment'&&d.quantity===0){bad(res,'ADJUSTMENT_CANNOT_BE_ZERO');return;}
