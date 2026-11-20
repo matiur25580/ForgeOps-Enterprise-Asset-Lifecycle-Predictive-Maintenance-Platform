@@ -58,6 +58,9 @@ const assetSchema = new Schema<AssetRecord>({
 assetSchema.index({ tenantId: 1, assetTag: 1 }, { unique: true });
 assetSchema.index({ tenantId: 1, facilityId: 1, lifecycleStatus: 1, archivedAt: 1 });
 assetSchema.index({ tenantId: 1, category: 1, criticality: 1 });
-assetSchema.index({ tenantId: 1, serialNumber: 1 }, { sparse: true });
+assetSchema.index(
+  { tenantId: 1, serialNumber: 1 },
+  { unique: true, partialFilterExpression: { serialNumber: { $type: 'string' } } }
+);
 
 export const Asset = model<AssetRecord>('Asset', assetSchema);
