@@ -1,11 +1,14 @@
-import cors from 'cors';\nimport cookieParser from 'cookie-parser';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/error-handler.js';
-import { healthRouter } from './routes/health.routes.js';\nimport { authRouter } from './routes/auth.routes.js';\nimport { accountRouter } from './routes/account.routes.js';
+import { healthRouter } from './routes/health.routes.js';
+import { authRouter } from './routes/auth.routes.js';
+import { accountRouter } from './routes/account.routes.js';
 
 export const app = express();
 
@@ -21,7 +24,8 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json({ limit: '1mb' }));\napp.use(cookieParser());
+app.use(express.json({ limit: '1mb' }));
+app.use(cookieParser());
 app.use(pinoHttp({ level: env.LOG_LEVEL }));
 app.use(rateLimit({
   windowMs: 60_000,
@@ -38,5 +42,7 @@ app.get('/api/v1', (_request, response) => {
   });
 });
 
-app.use('/health', healthRouter);\napp.use('/api/v1/auth', authRouter);\napp.use('/api/v1/account', accountRouter);
+app.use('/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/account', accountRouter);
 app.use(errorHandler);
