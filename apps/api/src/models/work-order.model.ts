@@ -24,6 +24,7 @@ export interface WorkOrderRecord {
   scheduledFor?: Date;
   sourceAlertId?: Types.ObjectId;
   sourceInspectionId?: Types.ObjectId;
+  sourceInspectionScheduleId?: Types.ObjectId;
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
   completedAt?: Date;
@@ -49,6 +50,7 @@ const workOrderSchema = new Schema<WorkOrderRecord>({
   scheduledFor: { type: Date },
   sourceAlertId: { type: Schema.Types.ObjectId, ref: 'AssetAlert' },
   sourceInspectionId: { type: Schema.Types.ObjectId, ref: 'Inspection' },
+  sourceInspectionScheduleId: { type: Schema.Types.ObjectId, ref: 'InspectionSchedule' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   completedAt: { type: Date }
@@ -59,6 +61,7 @@ workOrderSchema.index({ tenantId: 1, facilityId: 1, status: 1, dueAt: 1 });
 workOrderSchema.index({ tenantId: 1, assignedTo: 1, status: 1 });
 workOrderSchema.index({ tenantId: 1, sourceAlertId: 1 }, { unique: true, partialFilterExpression: { sourceAlertId: { $type: 'objectId' } } });
 workOrderSchema.index({ tenantId: 1, sourceInspectionId: 1 }, { unique: true, partialFilterExpression: { sourceInspectionId: { $type: 'objectId' } } });
+workOrderSchema.index({ tenantId: 1, sourceInspectionScheduleId: 1, scheduledFor: 1 }, { unique: true, partialFilterExpression: { sourceInspectionScheduleId: { $type: 'objectId' }, scheduledFor: { $type: 'date' } } });
 workOrderSchema.index(
   { tenantId: 1, sourcePlanId: 1, scheduledFor: 1 },
   { unique: true, partialFilterExpression: { sourcePlanId: { $type: 'objectId' }, scheduledFor: { $type: 'date' } } }
