@@ -81,7 +81,11 @@ mfaRouter.post('/disable',mfaLimiter,async(req,res,next)=>{
     if(!user.mfaEnabled||!user.mfaSecretEncrypted){res.status(409).json({error:{code:'MFA_NOT_ENABLED'}});return;}
     if(!await bcrypt.compare(parsed.data.password,user.passwordHash)){res.status(401).json({error:{code:'PASSWORD_INVALID'}});return;}
     if(!await consumeMfaProof(user._id.toString(),user.tenantId.toString(),parsed.data.code)){res.status(401).json({error:{code:'MFA_CODE_INVALID_OR_ALREADY_USED'}});return;}
-    await User.updateOne({_id:user._id,tenantId:user.tenantId},{$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}});
+    const disablement=await User.updateOne(
+      {_id:user._id,tenantId:user.tenantId,status:'active',mfaEnabled:true},
+      {$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}}
+    );
+    if(disablement.modifiedCount!==1){res.status(409).json({error:{code:'MFA_STATE_CHANGED'}});return;}
     await recordChange(req.auth!.tenantId,req.auth!.sub,false);
     res.status(200).json({data:{enabled:false}});
   }catch(error){next(error);}
