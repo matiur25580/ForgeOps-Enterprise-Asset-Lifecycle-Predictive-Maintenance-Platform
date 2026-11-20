@@ -312,6 +312,11 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(firstRefresh.status,200);
   const rotatedCookie=firstRefresh.headers.get('set-cookie')??'';
   const rotatedRefreshToken=rotatedCookie.match(/forgeops_refresh=([^;]+)/)?.[1];
+  assert.match(rotatedCookie,/forgeops_refresh=[^;]+/);
+  assert.match(rotatedCookie,/Path=\\/api\\/v1\\/auth/i);
+  assert.match(rotatedCookie,/HttpOnly/i);
+  assert.match(rotatedCookie,/SameSite=Lax/i);
+  assert.match(rotatedCookie,/Max-Age=\\d+/i);
   assert.ok(rotatedRefreshToken);
   assert.notEqual(rotatedRefreshToken,reusedRefreshToken);
 
@@ -378,6 +383,12 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
     headers:{cookie:'forgeops_refresh='+logoutRefreshToken}
   });
   assert.equal(logoutResponse.status,204);
+  const clearedLogoutCookie=logoutResponse.headers.get('set-cookie')??'';
+  assert.match(clearedLogoutCookie,/forgeops_refresh=;/);
+  assert.match(clearedLogoutCookie,/Path=\\/api\\/v1\\/auth/i);
+  assert.match(clearedLogoutCookie,/Max-Age=0/i);
+  assert.match(clearedLogoutCookie,/HttpOnly/i);
+  assert.match(clearedLogoutCookie,/SameSite=Lax/i);
   const revokedLogoutSession=await RefreshSession.findById(logoutSession._id);
   assert.ok(revokedLogoutSession.revokedAt);
   const refreshAfterLogout=await fetch(url+'/api/v1/auth/refresh',{
@@ -392,6 +403,12 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
     headers:{cookie:'forgeops_refresh='+logoutRefreshToken}
   });
   assert.equal(repeatedLogout.status,204);
+  const logoutWithoutCookie=await fetch(url+'/api/v1/auth/logout',{method:'POST'});
+  assert.equal(logoutWithoutCookie.status,204);
+  const clearedMissingCookie=logoutWithoutCookie.headers.get('set-cookie')??'';
+  assert.match(clearedMissingCookie,/forgeops_refresh=;/);
+  assert.match(clearedMissingCookie,/Path=\\/api\\/v1\\/auth/i);
+  assert.match(clearedMissingCookie,/Max-Age=0/i);
 
   const missingRefreshCookieResponse=await fetch(url+'/api/v1/auth/refresh',{
     method:'POST'
