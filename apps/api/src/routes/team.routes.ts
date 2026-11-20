@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { Types } from 'mongoose';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { authenticate } from '../middleware/authenticate.js';
 import { AuditEvent } from '../models/audit-event.model.js';
 import { Facility } from '../models/facility.model.js';
@@ -90,7 +91,7 @@ teamRouter.post('/invitations', authenticate, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-teamRouter.post('/invitations/accept', async (req, res, next) => {
+teamRouter.post('/invitations/accept', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false, skip: () => process.env.NODE_ENV === 'test' }), async (req, res, next) => {
   try {
     const parsed = acceptSchema.safeParse(req.body);
     if (!parsed.success) { res.status(400).json({ error: { code: 'VALIDATION_ERROR', details: parsed.error.flatten() } }); return; }
