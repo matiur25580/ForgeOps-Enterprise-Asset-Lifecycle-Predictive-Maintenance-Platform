@@ -28,6 +28,11 @@ export interface WorkOrderRecord {
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
   completedAt?: Date;
+  laborCost?: number;
+  externalServiceCost?: number;
+  costCurrency: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const workOrderSchema = new Schema<WorkOrderRecord>({
@@ -53,7 +58,10 @@ const workOrderSchema = new Schema<WorkOrderRecord>({
   sourceInspectionScheduleId: { type: Schema.Types.ObjectId, ref: 'InspectionSchedule' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  completedAt: { type: Date }
+  completedAt: { type: Date },
+  laborCost: { type: Number, min: 0, max: 100000000 },
+  externalServiceCost: { type: Number, min: 0, max: 100000000 },
+  costCurrency: { type: String, uppercase: true, minlength: 3, maxlength: 3, default: 'USD', required: true }
 }, { timestamps: true });
 
 workOrderSchema.index({ tenantId: 1, workOrderNumber: 1 }, { unique: true });
