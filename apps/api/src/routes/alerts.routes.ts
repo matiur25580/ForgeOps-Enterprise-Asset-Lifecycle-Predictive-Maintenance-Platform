@@ -69,7 +69,7 @@ alertsRouter.patch('/:alertId/acknowledge', authorize('owner','admin','manager',
     const alert=await AssetAlert.findOne({_id:id,tenantId:c.tenantId});
     if(!alert||!inScope(c,alert.facilityId.toString())){res.status(404).json({error:{code:'ALERT_NOT_FOUND'}});return;}
     if(alert.status==='resolved'){res.status(409).json({error:{code:'ALERT_ALREADY_RESOLVED'}});return;}
-    if(alert.status==='open'){alert.status='acknowledged';alert.acknowledgedAt=new Date();alert.acknowledgedBy=new Types.ObjectId(c.sub);await alert.save();}
+    if(alert.status==='open'){alert.status='acknowledged';alert.acknowledgedAt=new Date();alert.acknowledgedBy=new Types.ObjectId(c.sub);await alert.save();await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:alert.facilityId,entityType:'asset_alert',entityId:alert._id,action:'acknowledged',changes:{status:'acknowledged'}});}
     res.status(200).json({data:{alert}});
   } catch(e) { next(e); }
 });
@@ -79,7 +79,7 @@ alertsRouter.patch('/:alertId/resolve', authorize('owner','admin','manager'), as
     if(!Types.ObjectId.isValid(id)){res.status(400).json({error:{code:'INVALID_ALERT_ID'}});return;}
     const alert=await AssetAlert.findOne({_id:id,tenantId:c.tenantId});
     if(!alert||!inScope(c,alert.facilityId.toString())){res.status(404).json({error:{code:'ALERT_NOT_FOUND'}});return;}
-    if(alert.status!=='resolved'){alert.status='resolved';alert.resolvedAt=new Date();alert.resolvedBy=new Types.ObjectId(c.sub);await alert.save();}
+    if(alert.status!=='resolved'){alert.status='resolved';alert.resolvedAt=new Date();alert.resolvedBy=new Types.ObjectId(c.sub);await alert.save();await AuditEvent.create({tenantId:new Types.ObjectId(c.tenantId),actorUserId:new Types.ObjectId(c.sub),facilityId:alert.facilityId,entityType:'asset_alert',entityId:alert._id,action:'resolved',changes:{status:'resolved'}});}
     res.status(200).json({data:{alert}});
   } catch(e) { next(e); }
 });
