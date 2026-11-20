@@ -29,6 +29,7 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "@types/cookie-parser": "^1.4.9",
-    "@types/jsonwebtoken": "^9.0.10"
+    "@types/jsonwebtoken": "^9.0.10",
+    "mongodb-memory-server": "^10.2.0"
   }
 }
