@@ -47,7 +47,7 @@ mfaRouter.post('/confirm',mfaLimiter,async(req,res,next)=>{
     if(step===null){res.status(400).json({error:{code:'MFA_CODE_INVALID'}});return;}
     const recoveryCodes=createRecoveryCodes();
     user.mfaSecretEncrypted=user.mfaPendingSecretEncrypted;
-    user.mfaPendingSecretEncrypted=undefined;
+    user.set('mfaPendingSecretEncrypted',undefined);
     user.mfaRecoveryCodeHashes=recoveryCodes.map(hashRecoveryCode);
     user.mfaLastUsedStep=step;
     user.mfaEnabled=true;
