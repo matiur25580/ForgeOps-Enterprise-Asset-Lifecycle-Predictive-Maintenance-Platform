@@ -393,6 +393,42 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   });
   assert.equal(repeatedLogout.status,204);
 
+  const missingRefreshCookieResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST'
+  });
+  assert.equal(missingRefreshCookieResponse.status,401);
+  const missingRefreshCookieBody=await missingRefreshCookieResponse.json();
+  assert.equal(missingRefreshCookieBody.error.code,'REFRESH_TOKEN_MISSING');
+
+  const malformedRefreshCookieResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh=%ZZ%broken'}
+  });
+  assert.equal(malformedRefreshCookieResponse.status,401);
+  const malformedRefreshCookieBody=await malformedRefreshCookieResponse.json();
+  assert.equal(malformedRefreshCookieBody.error.code,'REFRESH_TOKEN_INVALID');
+
+  const boundaryExpiredToken='refresh-token-expired-at-boundary-regression';
+  const boundaryExpiredAt=new Date(Date.now()-1);
+  const boundaryExpiredSession=await RefreshSession.create({
+    userId:inactiveUser._id,
+    tenantId:inactiveUser.tenantId,
+    tokenHash:hashToken(boundaryExpiredToken),
+    familyId:'refresh-token-expiry-boundary-family',
+    expiresAt:boundaryExpiredAt
+  });
+  const boundaryExpiredResponse=await fetch(url+'/api/v1/auth/refresh',{
+    method:'POST',
+    headers:{cookie:'forgeops_refresh='+boundaryExpiredToken}
+  });
+  assert.equal(boundaryExpiredResponse.status,401);
+  const boundaryExpiredBody=await boundaryExpiredResponse.json();
+  assert.equal(boundaryExpiredBody.error.code,'REFRESH_TOKEN_INVALID');
+  const unchangedBoundarySession=await RefreshSession.findById(boundaryExpiredSession._id).select('+tokenHash');
+  assert.ok(unchangedBoundarySession);
+  assert.equal(unchangedBoundarySession.revokedAt,null);
+  assert.equal(unchangedBoundarySession.tokenHash,hashToken(boundaryExpiredToken));
+
   const expiredRefreshToken='expired-refresh-token-regression-test';
   const expiredRefreshSession=await RefreshSession.create({
     userId:inactiveUser._id,
