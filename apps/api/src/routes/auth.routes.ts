@@ -2,11 +2,12 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { Types } from 'mongoose';
 import { env } from '../config/env.js';
 import { createFamilyId, createRefreshToken, hashToken, refreshExpiry, signAccessToken } from '../auth/token.service.js';
 import { RefreshSession } from '../models/refresh-session.model.js';
 import { Tenant } from '../models/tenant.model.js';
-import { User } from '../models/user.model.js';
+import { User, type UserRole } from '../models/user.model.js';
 import { authenticate } from '../middleware/authenticate.js';
 
 export const authRouter = Router();
@@ -35,30 +36,40 @@ const loginSchema = z.object({
   password: z.string().min(1).max(128)
 });
 
-function publicUser(user: { id: string; tenantId: { toString(): string }; email: string; firstName: string; lastName: string; role: string; facilityIds: { toString(): string }[] }) {
+type PublicUserSource = {
+  _id: Types.ObjectId;
+  tenantId: Types.ObjectId;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  facilityIds: Types.ObjectId[];
+};
+
+function publicUser(user: PublicUserSource) {
   return {
-    id: user.id,
+    id: user._id.toString(),
     tenantId: user.tenantId.toString(),
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    role: user.role as 'owner' | 'admin' | 'manager' | 'technician' | 'viewer',
+    role: user.role,
     facilityIds: user.facilityIds.map((id) => id.toString())
   };
 }
 
-async function issueSession(user: { id: string; tenantId: { toString(): string }; role: string; facilityIds: { toString(): string }[] }, familyId = createFamilyId()) {
+async function issueSession(user: Pick<PublicUserSource, '_id' | 'tenantId' | 'role' | 'facilityIds'>, familyId = createFamilyId()) {
   const refreshToken = createRefreshToken();
   const tokenHash = hashToken(refreshToken);
   await RefreshSession.create({
-    userId: user.id,
+    userId: user._id,
     tenantId: user.tenantId,
     tokenHash,
     familyId,
     expiresAt: refreshExpiry()
   });
   const accessToken = signAccessToken({
-    sub: user.id,
+    sub: user._id.toString(),
     tenantId: user.tenantId.toString(),
     role: user.role,
     facilityIds: user.facilityIds.map((id) => id.toString())
@@ -170,7 +181,7 @@ authRouter.post('/refresh', async (request, response, next) => {
     }
 
     const accessToken = signAccessToken({
-      sub: user.id,
+      sub: user._id.toString(),
       tenantId: user.tenantId.toString(),
       role: user.role,
       facilityIds: user.facilityIds.map((id) => id.toString())
