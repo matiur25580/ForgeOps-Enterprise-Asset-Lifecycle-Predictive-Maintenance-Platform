@@ -196,6 +196,17 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
   assert.equal(rotation.status,200);
   assert.equal(rotation.data.data.recoveryCodes.length,10);
 
+  const concurrentRotations=await Promise.all([0,1].map(()=>call('/api/v1/mfa/recovery-codes/regenerate','POST',{
+    code:rotation.data.data.recoveryCodes[2]
+  })));
+  assert.deepEqual(concurrentRotations.map(result=>result.status).sort(),[200,401]);
+  const concurrentRotation=concurrentRotations.find(result=>result.status===200);
+  assert.ok(concurrentRotation);
+  assert.equal(concurrentRotation.data.data.recoveryCodes.length,10);
+  const statusAfterConcurrentRotation=await call('/api/v1/mfa/status');
+  assert.equal(statusAfterConcurrentRotation.status,200);
+  assert.equal(statusAfterConcurrentRotation.data.data.recoveryCodesRemaining,10);
+
   const oldCodeLogin=await call('/api/v1/auth/login','POST',{
     organizationSlug:account.organizationSlug,
     email:account.email,
@@ -212,7 +223,7 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
     email:account.email,
     password:account.password
   },null);
-  const rotatedCode=rotation.data.data.recoveryCodes[0];
+  const rotatedCode=concurrentRotation.data.data.recoveryCodes[0];
   const rotatedCodeLoginResult=await call('/api/v1/auth/login/mfa','POST',{
     challengeToken:rotatedCodeLogin.data.data.challengeToken,
     code:rotatedCode
@@ -222,7 +233,7 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
 
   const wrongPasswordDisable=await call('/api/v1/mfa/disable','POST',{
     password:'Definitely-Wrong-Password-2026!',
-    code:rotation.data.data.recoveryCodes[1]
+    code:concurrentRotation.data.data.recoveryCodes[1]
   });
   assert.equal(wrongPasswordDisable.status,401);
   assert.equal(wrongPasswordDisable.data.error.code,'PASSWORD_INVALID');
