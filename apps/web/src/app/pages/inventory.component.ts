@@ -46,7 +46,7 @@ export class InventoryComponent implements OnInit{
  partName(v:Part|string):string{return typeof v==='object'&&v?v.name:this.parts.find(p=>p._id===v)?.name||'—'}
  partCode(v:Part|string):string{return typeof v==='object'&&v?v.partNumber:this.parts.find(p=>p._id===v)?.partNumber||'—'}
  facilityName(v:Facility|string):string{const id=typeof v==='object'&&v?v._id:v;return this.facilities.find(f=>f._id===id)?.code||(typeof v==='object'&&v?v.code:'—')}
- vendorName(v:Vendor|string|undefined):string{return typeof v==='object'&&v?v.name:this.vendors.find(x=>x._id===v)?.name||'—'}
+ vendorName(v:Vendor|{name:string}|string|undefined):string{return typeof v==='object'&&v?v.name:this.vendors.find(x=>x._id===v)?.name||'—'}
  label(v:string):string{return v.replaceAll('_',' ')}
  message(e:any):string{return e?.error?.error?.message||e?.error?.error?.code||'The inventory request could not be completed.'}
  logout():void{this.api.logout().subscribe({next:()=>void this.router.navigate(['/login']),error:()=>void this.router.navigate(['/login'])})}
