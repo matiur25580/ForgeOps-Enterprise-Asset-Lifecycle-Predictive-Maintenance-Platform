@@ -131,6 +131,9 @@ test('MFA lifecycle enforces setup expiry, TOTP replay protection, recovery rota
     code:oldCodes[0]
   },null)));
   assert.deepEqual(concurrentProofs.map(result=>result.status).sort(),[200,401]);
+  const statusAfterConcurrentUse=await call('/api/v1/mfa/status');
+  assert.equal(statusAfterConcurrentUse.status,200);
+  assert.equal(statusAfterConcurrentUse.data.data.recoveryCodesRemaining,9);
 
   const rotation=await call('/api/v1/mfa/recovery-codes/regenerate','POST',{code:oldCodes[2]});
   assert.equal(rotation.status,200);
