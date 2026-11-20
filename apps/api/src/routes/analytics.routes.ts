@@ -16,9 +16,9 @@ analyticsRouter.get('/summary',async(req,res,next)=>{
   const c=claimsFor(req);
   const endRaw=typeof req.query.to==='string'?new Date(req.query.to):new Date();
   const startRaw=typeof req.query.from==='string'?new Date(req.query.from):new Date(endRaw.getTime()-30*86400000);
-  if(Number.isNaN(startRaw.getTime())||Number.isNaN(endRaw.getTime())||startRaw>=endRaw){res.status(400).json({error:{code:'INVALID_DATE_RANGE'}});return;}
   const start=new Date(startRaw),end=new Date(endRaw);
   if(typeof req.query.to==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(req.query.to))end.setUTCHours(23,59,59,999);
+  if(Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||start>=end){res.status(400).json({error:{code:'INVALID_DATE_RANGE'}});return;}
   const scope:Record<string,unknown>={tenantId:new Types.ObjectId(c.tenantId)};
   if(!admin(c))scope.facilityId={$in:c.facilityIds.map(x=>new Types.ObjectId(x))};
   if(typeof req.query.facilityId==='string'){
@@ -26,7 +26,7 @@ analyticsRouter.get('/summary',async(req,res,next)=>{
    scope.facilityId=new Types.ObjectId(req.query.facilityId);
   }
   const [allOrders,issuedCosts,assetCount,operatingAssets,downtimeEvents]=await Promise.all([
-   WorkOrder.find({...scope,createdAt:{$lte:end}}).select('type status priority createdAt completedAt actualHours facilityId assetId dueAt laborCost externalServiceCost costCurrency').sort({createdAt:1}).limit(20000).lean(),
+   WorkOrder.find({...scope,createdAt:{$lte:end}}).select('type status priority createdAt completedAt actualHours facilityId assetId dueAt laborCost externalServiceCost costCurrency').sort({createdAt:-1}).limit(20000).lean(),
    StockMovement.aggregate([{$match:{...scope,movementType:'issue',occurredAt:{$gte:start,$lte:end}}},{$group:{_id:'$currency',partsIssueCost:{$sum:{$multiply:[{$abs:'$quantity'},{$ifNull:['$unitCost',0]}]}},issuedLines:{$sum:1}}}]),
    Asset.countDocuments({...scope,archivedAt:null}),
    Asset.find({...scope,archivedAt:null,scheduledOperatingHoursPerWeek:{$gt:0}}).select('_id scheduledOperatingHoursPerWeek').lean(),
