@@ -8,6 +8,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   MONGODB_URI: z.string().min(1).default('mongodb://localhost:27017/forgeops'),
   AUTH_ACCESS_TOKEN_SECRET: z.string().min(32),
+  MFA_ENCRYPTION_KEY: z.string().min(32).optional(),
   AUTH_ACCESS_TOKEN_TTL: z.string().default('15m'),
   AUTH_REFRESH_TOKEN_DAYS: z.coerce.number().int().min(1).max(90).default(14),
   SMTP_HOST: z.string().optional(),
@@ -28,5 +29,6 @@ if (!parsed.success) {
 export const env = {
   ...parsed.data,
   corsOrigins: parsed.data.API_CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean),
-  smtpSecure: parsed.data.SMTP_SECURE === 'true'
+  smtpSecure: parsed.data.SMTP_SECURE === 'true',
+  mfaEncryptionKey: parsed.data.MFA_ENCRYPTION_KEY ?? parsed.data.AUTH_ACCESS_TOKEN_SECRET
 };
