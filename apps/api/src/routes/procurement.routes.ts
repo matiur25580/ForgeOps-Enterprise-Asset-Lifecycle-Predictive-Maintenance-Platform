@@ -75,8 +75,25 @@ procurementRouter.post('/requisitions/:id/purchase-order',authorize('owner','adm
  const vendor=await Vendor.findOne({_id:p.data.vendorId,tenantId:c.tenantId,status:'active'}).select('_id');if(!vendor){fail(res,'VENDOR_NOT_FOUND',404);return;}
  const ids=doc.items.map(x=>x.sparePartId);const parts=await SparePart.find({_id:{$in:ids},tenantId:c.tenantId,active:true}).select('_id currency');if(parts.length!==new Set(ids.map(x=>x.toString())).size){fail(res,'SPARE_PART_NOT_FOUND',404);return;}const currencies=[...new Set(parts.map(x=>x.currency))];if(currencies.length!==1){fail(res,'MIXED_CURRENCY_REQUISITION',409);return;}
  const items=doc.items.map(x=>({sparePartId:x.sparePartId,description:x.description,orderedQuantity:x.quantity,receivedQuantity:0,unitCost:x.estimatedUnitCost}));const subtotal=items.reduce((s,x)=>s+x.orderedQuantity*x.unitCost,0);
- const order=await PurchaseOrder.create({tenantId:doc.tenantId,facilityId:doc.facilityId,purchaseOrderNumber:number('PO'),requisitionId:doc._id,vendorId:new Types.ObjectId(p.data.vendorId),status:'issued',items,currency:currencies[0],subtotal,expectedAt:p.data.expectedAt,issuedAt:new Date(),createdBy:new Types.ObjectId(c.sub),updatedBy:new Types.ObjectId(c.sub),notes:p.data.notes});
- doc.status='ordered';doc.updatedBy=new Types.ObjectId(c.sub);await doc.save();await audit(c,doc.facilityId,'purchase_order',order._id,'created',{requisitionId:doc._id.toString(),subtotal,currency:order.currency});await audit(c,doc.facilityId,'purchase_requisition',doc._id,'updated',{status:'ordered'});res.status(201).json({data:{purchaseOrder:order,requisition:doc}});
+ const claimed=await PurchaseRequisition.findOneAndUpdate(
+  {_id:id,tenantId:c.tenantId,status:'approved'},
+  {$set:{status:'ordered',updatedBy:new Types.ObjectId(c.sub)}},
+  {new:true}
+ );
+ if(!claimed){fail(res,'REQUISITION_ALREADY_ORDERED_OR_CHANGED',409);return;}
+ let order;
+ try{
+  order=await PurchaseOrder.create({tenantId:doc.tenantId,facilityId:doc.facilityId,purchaseOrderNumber:number('PO'),requisitionId:doc._id,vendorId:new Types.ObjectId(p.data.vendorId),status:'issued',items,currency:currencies[0],subtotal,expectedAt:p.data.expectedAt,issuedAt:new Date(),createdBy:new Types.ObjectId(c.sub),updatedBy:new Types.ObjectId(c.sub),notes:p.data.notes});
+ }catch(error){
+  const existing=await PurchaseOrder.exists({tenantId:c.tenantId,requisitionId:doc._id});
+  if(existing){fail(res,'PURCHASE_ORDER_ALREADY_EXISTS',409);return;}
+  await PurchaseRequisition.updateOne(
+   {_id:doc._id,tenantId:c.tenantId,status:'ordered',updatedBy:new Types.ObjectId(c.sub)},
+   {$set:{status:'approved',updatedBy:doc.updatedBy}}
+  );
+  throw error;
+ }
+ await audit(c,doc.facilityId,'purchase_order',order._id,'created',{requisitionId:doc._id.toString(),subtotal,currency:order.currency});await audit(c,doc.facilityId,'purchase_requisition',claimed._id,'updated',{status:'ordered'});res.status(201).json({data:{purchaseOrder:order,requisition:claimed}});
  }catch(e){next(e);}
 });
 procurementRouter.get('/goods-receipts',async(req,res,next)=>{
