@@ -22,3 +22,24 @@ test('procurement rejects references outside the authenticated tenant and facili
  const foreign=await request('/api/v1/auth/register',{method:'POST',auth:null,body:{organizationName:'Foreign Org',organizationSlug:'foreign-procurement',firstName:'Foreign',lastName:'Owner',email:'foreign@procurement.example',password:'A-Strong-Password-2026!'}});const foreignToken=foreign.payload.data.accessToken;
  const denied=await request('/api/v1/procurement/requisitions',{method:'POST',body:{facilityId,items:[{sparePartId:partId,quantity:2,estimatedUnitCost:12}],justification:'Attempt cross tenant access.'},auth:foreignToken});assert.equal(denied.response.status,404);
 });
+
+test('concurrent purchase-order issuance creates exactly one order for an approved requisition',async()=>{
+ const created=await request('/api/v1/procurement/requisitions',{method:'POST',body:{facilityId,items:[{sparePartId:partId,quantity:5,estimatedUnitCost:12.5}],justification:'Prevent duplicate purchase orders under concurrency.'}});
+ assert.equal(created.response.status,201);
+ const reqId=created.payload.data.requisition._id;
+ const submitted=await request('/api/v1/procurement/requisitions/'+reqId+'/submit',{method:'POST',body:{}});
+ assert.equal(submitted.response.status,200);
+ const approved=await request('/api/v1/procurement/requisitions/'+reqId+'/approve',{method:'POST',body:{}});
+ assert.equal(approved.response.status,200);
+
+ const attempts=await Promise.all([
+  request('/api/v1/procurement/requisitions/'+reqId+'/purchase-order',{method:'POST',body:{vendorId}}),
+  request('/api/v1/procurement/requisitions/'+reqId+'/purchase-order',{method:'POST',body:{vendorId}})
+ ]);
+ assert.deepEqual(attempts.map(x=>x.response.status).sort(),[201,409]);
+ const orders=await request('/api/v1/procurement/purchase-orders');
+ assert.equal(orders.response.status,200);
+ assert.equal(orders.payload.data.purchaseOrders.length,1);
+ const requisitions=await request('/api/v1/procurement/requisitions?status=ordered');
+ assert.equal(requisitions.payload.data.requisitions.length,1);
+});
