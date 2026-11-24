@@ -71,6 +71,7 @@ const assetSchema = new Schema<AssetRecord>({
   archivedAt: { type: Date, default: null }
 }, { timestamps: true });
 
+// Tenant-prefixed indexes enforce per-tenant uniqueness and support common asset lookups.
 assetSchema.index({ tenantId: 1, assetTag: 1 }, { unique: true });
 assetSchema.index({ tenantId: 1, facilityId: 1, lifecycleStatus: 1, archivedAt: 1 });
 assetSchema.index({ tenantId: 1, category: 1, criticality: 1 });
