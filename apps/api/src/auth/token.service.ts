@@ -31,6 +31,7 @@ export function signAccessToken(claims: AccessClaims): string {
   return jwt.sign(claims, env.AUTH_ACCESS_TOKEN_SECRET, options);
 }
 
+// Verify the signature and algorithm, then reject tokens missing required application claims.
 export function verifyAccessToken(token: string): AccessClaims {
   const decoded = jwt.verify(token, env.AUTH_ACCESS_TOKEN_SECRET, { algorithms: ['HS256'] });
   if (typeof decoded === 'string' || !decoded.sub || !decoded.tenantId ||
