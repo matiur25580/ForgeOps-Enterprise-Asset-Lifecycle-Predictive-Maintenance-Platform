@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { UserRole } from '../models/user.model.js';
 
+// Build a route guard that checks the verified session role against the route's allowlist.
 export function authorize(...allowedRoles: UserRole[]) {
   return (request: Request, response: Response, next: NextFunction): void => {
     if (!request.auth) {
