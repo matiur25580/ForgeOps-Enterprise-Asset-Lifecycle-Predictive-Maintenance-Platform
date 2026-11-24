@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from 'express';
 import { env } from '../config/env.js';
 
+// Keep internal exception details out of production responses while preserving conflict handling.
 export const errorHandler: ErrorRequestHandler = (error: unknown, _request, response, _next) => {
   const message = error instanceof Error ? error.message : 'Unexpected server error';
 
