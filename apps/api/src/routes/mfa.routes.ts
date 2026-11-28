@@ -47,13 +47,26 @@ mfaRouter.post('/confirm',mfaLimiter,async(req,res,next)=>{
     const step=verifyTotp(secret,parsed.data.code);
     if(step===null){res.status(400).json({error:{code:'MFA_CODE_INVALID'}});return;}
     const recoveryCodes=createRecoveryCodes();
-    user.mfaSecretEncrypted=user.mfaPendingSecretEncrypted;
-    user.set('mfaPendingSecretEncrypted',undefined);
-    user.set('mfaPendingSecretExpiresAt',undefined);
-    user.mfaRecoveryCodeHashes=recoveryCodes.map(hashRecoveryCode);
-    user.mfaLastUsedStep=step;
-    user.mfaEnabled=true;
-    await user.save();
+    const activation=await User.updateOne(
+      {
+        _id:user._id,
+        tenantId:user.tenantId,
+        status:'active',
+        mfaEnabled:false,
+        mfaPendingSecretEncrypted:user.mfaPendingSecretEncrypted,
+        mfaPendingSecretExpiresAt:{$gt:new Date()}
+      },
+      {
+        $set:{
+          mfaSecretEncrypted:user.mfaPendingSecretEncrypted,
+          mfaRecoveryCodeHashes:recoveryCodes.map(hashRecoveryCode),
+          mfaLastUsedStep:step,
+          mfaEnabled:true
+        },
+        $unset:{mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}
+      }
+    );
+    if(activation.modifiedCount!==1){res.status(409).json({error:{code:'MFA_SETUP_NOT_STARTED'}});return;}
     await recordChange(req.auth!.tenantId,req.auth!.sub,true);
     res.status(200).json({data:{enabled:true,recoveryCodes,warning:'Recovery codes are displayed once. Store them securely; each code works once.'}});
   }catch(error){next(error);}
@@ -68,7 +81,11 @@ mfaRouter.post('/disable',mfaLimiter,async(req,res,next)=>{
     if(!user.mfaEnabled||!user.mfaSecretEncrypted){res.status(409).json({error:{code:'MFA_NOT_ENABLED'}});return;}
     if(!await bcrypt.compare(parsed.data.password,user.passwordHash)){res.status(401).json({error:{code:'PASSWORD_INVALID'}});return;}
     if(!await consumeMfaProof(user._id.toString(),user.tenantId.toString(),parsed.data.code)){res.status(401).json({error:{code:'MFA_CODE_INVALID_OR_ALREADY_USED'}});return;}
-    await User.updateOne({_id:user._id,tenantId:user.tenantId},{$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}});
+    const disablement=await User.updateOne(
+      {_id:user._id,tenantId:user.tenantId,status:'active',mfaEnabled:true},
+      {$set:{mfaEnabled:false,mfaRecoveryCodeHashes:[],mfaLastUsedStep:-1},$unset:{mfaSecretEncrypted:1,mfaPendingSecretEncrypted:1,mfaPendingSecretExpiresAt:1}}
+    );
+    if(disablement.modifiedCount!==1){res.status(409).json({error:{code:'MFA_STATE_CHANGED'}});return;}
     await recordChange(req.auth!.tenantId,req.auth!.sub,false);
     res.status(200).json({data:{enabled:false}});
   }catch(error){next(error);}
@@ -80,7 +97,11 @@ mfaRouter.post('/recovery-codes/regenerate',mfaLimiter,async(req,res,next)=>{
     if(!parsed.success){res.status(400).json({error:{code:'VALIDATION_ERROR'}});return;}
     if(!await consumeMfaProof(req.auth!.sub,req.auth!.tenantId,parsed.data.code)){res.status(401).json({error:{code:'MFA_CODE_INVALID_OR_ALREADY_USED'}});return;}
     const codes=createRecoveryCodes();
-    await User.updateOne({_id:req.auth!.sub,tenantId:req.auth!.tenantId,mfaEnabled:true},{$set:{mfaRecoveryCodeHashes:codes.map(hashRecoveryCode)}});
+    const rotation=await User.updateOne(
+      {_id:req.auth!.sub,tenantId:req.auth!.tenantId,status:'active',mfaEnabled:true},
+      {$set:{mfaRecoveryCodeHashes:codes.map(hashRecoveryCode)}}
+    );
+    if(rotation.modifiedCount!==1){res.status(409).json({error:{code:'MFA_STATE_CHANGED'}});return;}
     res.status(200).json({data:{recoveryCodes:codes,warning:'Previous recovery codes are now invalid. Store this new set securely.'}});
   }catch(error){next(error);}
 });
